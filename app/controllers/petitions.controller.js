@@ -54,7 +54,23 @@ exports.newPetition = async function(req, res){
 };
 
 exports.getPetition = async function(req, res){
-    return null;
+    console.log("Request to get petition")
+
+    const petitionId = req.params.id;
+
+    try {
+        const result = await petitions.getPetition(petitionId);
+        if (result.length !== 0) {
+            res.status( 200 )
+                .send( result );
+        } else {
+            res.status(404)
+                .send("Not Found");
+        }
+    } catch (err) {
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.updatePetition = async function(req, res){

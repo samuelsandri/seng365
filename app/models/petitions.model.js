@@ -1,5 +1,15 @@
 const db = require('../../config/db');
 
+/**
+ * Gets all petitions filtered by certain values
+ * @param startIndex
+ * @param count
+ * @param q
+ * @param categoryId
+ * @param authorId
+ * @param sortBy
+ * @returns {Promise<*>}
+ */
 exports.getPetitions = async function(startIndex, count, q, categoryId, authorId, sortBy){
     console.log("Request for petitions from the database");
 
@@ -52,6 +62,15 @@ exports.getPetitions = async function(startIndex, count, q, categoryId, authorId
     return rows;
 };
 
+/**
+ * Creates a new petition using given values
+ * @param title
+ * @param description
+ * @param categoryId
+ * @param closingDate
+ * @param authToken
+ * @returns {Promise<number>}
+ */
 exports.newPetition = async function(title, description, categoryId, closingDate, authToken){
     console.log("Request to add new petition to the database");
 
@@ -81,8 +100,17 @@ exports.newPetition = async function(title, description, categoryId, closingDate
     }
 };
 
-exports.getPetition = async function(){
-    return null;
+/**
+ * Gets the petition with the given id
+ * @param petitionId
+ * @returns {Promise<*>}
+ */
+exports.getPetition = async function(petitionId){
+    const conn = await db.getPool().getConnection();
+    const query = 'SELECT * FROM Petition p WHERE p.petition_id = ?';
+    const [result] = await conn.query(query, [petitionId]);
+    conn.release();
+    return result;
 };
 
 exports.updatePetition = async function(){
