@@ -82,11 +82,38 @@ exports.deletePetition = async function(req, res){
 };
 
 exports.getPetitionCategories = async function(req, res){
-    return null;
+    console.log('Request to get all petition categories');
+
+    try {
+        const result = await petitions.getPetitionCategories();
+        res.status( 200 )
+            .send( result );
+    } catch( err ) {
+        res.status( 500 )
+            .send( "Internal Server Error" );
+    }
 };
 
 exports.getPetitionPhoto = async function(req, res){
-    return null;
+    console.log( 'Request to get petition photo' );
+
+    const petitionId = req.params.id;
+
+    try {
+        const result = await petitions.getPetitionPhoto(petitionId);
+        if (result === 404) {
+            res.status(404)
+                .send("Not Found");
+        } else {
+            res.status(200)
+                .contentType(result.mimeType)
+                .send(result.image);
+        }
+    } catch( err ) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.setPetitionPhoto = async function(req, res){
