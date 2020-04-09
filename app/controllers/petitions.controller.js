@@ -54,7 +54,7 @@ exports.newPetition = async function(req, res){
 };
 
 exports.getPetition = async function(req, res){
-    console.log("Request to get petition")
+    console.log("Request to get petition");
 
     const petitionId = req.params.id;
 
@@ -74,11 +74,62 @@ exports.getPetition = async function(req, res){
 };
 
 exports.updatePetition = async function(req, res){
-    return null;
+    console.log('Request to update petition');
+
+    const userToken = req.header("X-Authorization");
+    const petitionId = req.params.id;
+
+    const title = req.body.title;
+    const description = req.body.description;
+    const categoryId = req.body.categoryId;
+    const closingDate = req.body.closingDate;
+
+    try {
+        const result = await petitions.updatePetition(petitionId, title, description, categoryId, closingDate, userToken);
+        if (result === 404) {
+            res.status(404)
+                .send("Not Found");
+        } else if (result === 403) {
+            res.status(403)
+                .send("Forbidden");
+        } else if (result === 400) {
+            res.status(400)
+                .send("Bad Request");
+        } else if (result === 401) {
+            res.status(401)
+                .send("Unauthorized");
+        } else {
+            res.status(200)
+                .send(result);
+        }
+    } catch (err) {
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.deletePetition = async function(req, res){
-    return null;
+    console.log('Request to delete petition');
+
+    const userToken = req.header("X-Authorization");
+    const petitionId = req.params.id;
+
+    try {
+        const result = await petitions.updatePetition(petitionId, userToken);
+        if (result === 404) {
+            res.status(404)
+                .send("Not Found");
+        } else if (result === 401) {
+            res.status(401)
+                .send("Unauthorized");
+        } else {
+            res.status(200)
+                .send("Ok");
+        }
+    } catch (err) {
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.getPetitionCategories = async function(req, res){

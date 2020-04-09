@@ -150,7 +150,7 @@ exports.updatePetition = async function(petitionId, title, description, category
             conn2.release();
             return result;
         } else {
-            return 401; // Unauthorised
+            return 401; // Unauthorized
         }
     }
 };
