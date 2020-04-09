@@ -113,7 +113,7 @@ exports.getPetition = async function(petitionId){
     const query = 'SELECT * FROM Petition p WHERE p.petition_id = ?';
     const [result] = await conn.query(query, [petitionId]);
     conn.release();
-    return result;
+    return result[0];
 };
 
 exports.updatePetition = async function(petitionId, title, description, categoryId, closingDate, authToken){
@@ -230,7 +230,7 @@ exports.setPetitionPhoto = async function(petitionId, authToken){
         return 404; // Not Found
     } else if (user.length === 0 || user[0].user_id !== petition.author_id) {
         return 401; //Unauthorized
-    } 
+    }
 
     conn.release();
 
