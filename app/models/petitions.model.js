@@ -251,7 +251,7 @@ exports.getPetitionCategories = async function(){
     console.log(`Request to get all petition categories from database`);
 
     const conn = await db.getPool().getConnection();
-    const query = 'SELECT * FROM Category c';
+    const query = 'SELECT category_id AS categoryId, name AS name FROM Category c';
     const [result] = await conn.query(query);
     conn.release();
 
@@ -295,22 +295,27 @@ exports.setPetitionPhoto = async function(petitionId, authToken, contentType, re
 
     if (petition.length === 0) {
         return 404; // Not Found
-    } else if (user.length === 0 || user[0].user_id !== petition[0].author_id) {
+    } else if (user.length === 0) {
         return 401; //Unauthorized
+    } else if (user[0].user_id !== petition[0].author_id) {
+        return 403;
     } else {
-        let code;
-        if (petition.photo_filename === null) {
-            code = 201;
-        } else {
-            code = 200;
-        }
         let imageType;
         if (contentType === "image/jpeg") {
             imageType = ".jpg";
         } else if (contentType === "image/png") {
             imageType = ".png";
-        } else {
+        } else if (contentType === "image/gif") {
             imageType = ".gif";
+        } else {
+            return 400;
+        }
+
+        let code;
+        if (petition.photo_filename === null) {
+            code = 201;
+        } else {
+            code = 200;
         }
         let filename = "petition_" + petitionId + imageType;
         request.pipe(fs.createWriteStream(photoDirectory + filename));
