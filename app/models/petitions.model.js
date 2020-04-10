@@ -20,7 +20,12 @@ exports.getPetitions = async function(startIndex, count, q, categoryId, authorId
     const conn = await db.getPool().getConnection();
 
     // Setup base query
-    var query = "SELECT p.* FROM Petition p LEFT OUTER JOIN Signature s ON p.petition_id = s.petition_id";
+    var query = "SELECT p.petition_id AS petitionId, p.title AS title, c.name AS category, u.name AS authorName, " +
+        "COUNT(s.petition_id) AS signatureCount " +
+        "FROM Petition p " +
+        "LEFT OUTER JOIN Signature s ON p.petition_id = s.petition_id " +
+        "JOIN Category c ON p.category_id = c.category_id " +
+        "JOIN User u ON p.author_id = u.user_id";
     // Add WHERE clause
     if (q !== undefined || categoryId !== undefined || authorId !== undefined) {
         query += " WHERE";
@@ -63,11 +68,7 @@ exports.getPetitions = async function(startIndex, count, q, categoryId, authorId
     const [rows] = await conn.query( query );
     conn.release();
 
-    if (rows.length === 0) {
-        return 400;
-    } else {
-        return rows;
-    }
+    return rows;
 };
 
 /**
