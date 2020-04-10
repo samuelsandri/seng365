@@ -165,7 +165,8 @@ exports.updatePetition = async function(petitionId, title, description, category
         return 401; // Unauthorized
     } else {
         const oldClosingDate = new Date(petition.closing_date);
-        if (currentDate > oldClosingDate || (closingDate !== undefined && currentDate > new Date(closingDate))) {
+        if (currentDate > oldClosingDate || (closingDate !== undefined && currentDate > new Date(closingDate))
+            || user[0].user_id !== petition[0].author_id) {
             conn.release();
             return 403; // Forbidden
         } else if (categoryId !== undefined && category.length === 0) {
