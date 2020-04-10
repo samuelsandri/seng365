@@ -298,31 +298,32 @@ exports.setPetitionPhoto = async function(petitionId, authToken, contentType, re
     } else if (user[0].user_id !== petition[0].author_id) {
         return 403;
     } else {
-        let imageType;
+        let imageType = null;
         if (contentType === "image/jpeg") {
             imageType = ".jpg";
         } else if (contentType === "image/png") {
             imageType = ".png";
         } else if (contentType === "image/gif") {
             imageType = ".gif";
-        } else {
+        }
+        if (imageType === null) {
             return 400;
-        }
-
-        let code;
-        if (petition.photo_filename === null) {
-            code = 201;
         } else {
-            code = 200;
-        }
-        let filename = "petition_" + petitionId + imageType;
-        request.pipe(fs.createWriteStream(photoDirectory + filename));
+            let code;
+            if (petition.photo_filename === null) {
+                code = 201;
+            } else {
+                code = 200;
+            }
+            let filename = "petition_" + petitionId + imageType;
+            request.pipe(fs.createWriteStream(photoDirectory + filename));
 
-        const conn2 = await db.getPool().getConnection();
-        const query = 'UPDATE Petition p SET photo_filename = ? WHERE p.petition_id = ?';
-        const [result] = await conn2.query(query, [filename, petitionId]);
-        conn2.release();
-        return code;
+            const conn2 = await db.getPool().getConnection();
+            const query = 'UPDATE Petition p SET photo_filename = ? WHERE p.petition_id = ?';
+            const [result] = await conn2.query(query, [filename, petitionId]);
+            conn2.release();
+            return code;
+        }
     }
 };
 
