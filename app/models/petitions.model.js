@@ -122,7 +122,16 @@ exports.getPetition = async function(petitionId){
     console.log("Request to get petition from the database");
 
     const conn = await db.getPool().getConnection();
-    const query = 'SELECT * FROM Petition p WHERE p.petition_id = ?';
+    const query = 'SELECT p.petition_id AS petitionId, p.title AS title, c.name AS category, u.name AS authorName, ' +
+        'COUNT(s.petition_id) AS signatureCount, ' +
+        'p.description AS description, p.author_id AS authorId, u.city AS authorCity, ' +
+        'u.country AS authorCountry, created_date AS createdDate, closing_date AS closingDate ' +
+        'FROM Petition p ' +
+        'LEFT OUTER JOIN Signature s ON p.petition_id = s.petition_id ' +
+        'JOIN Category c ON p.category_id = c.category_id ' +
+        'JOIN User u ON p.author_id = u.user_id ' +
+        'WHERE p.petition_id = ? ' +
+        'GROUP BY p.petition_id';
     const [result] = await conn.query(query, [petitionId]);
     conn.release();
 
