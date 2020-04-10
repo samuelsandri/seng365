@@ -118,11 +118,11 @@ exports.getPetitionCategories = async function(req, res){
 
     try {
         const result = await petitions.getPetitionCategories();
-        res.status( 200 )
-            .send( result );
-    } catch( err ) {
-        res.status( 500 )
-            .send( "Internal Server Error" );
+        res.status(200)
+            .send(result);
+    } catch(err) {
+        res.status(500)
+            .send("Internal Server Error");
     }
 };
 

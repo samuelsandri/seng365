@@ -188,7 +188,7 @@ exports.deletePetition = async function(petitionId, authToken){
         return 401; // Unauthorised
     } else {
         const conn2 = await db.getPool().getConnection();
-        const query = 'DELETE FROM Petition p WHERE p.petition_id = ?; DELETE FROM Signature s WHERE s.petition_id = ?';
+        const query = 'DELETE FROM Petition WHERE petition_id = ?; DELETE FROM Signature WHERE petition_id = ?';
         const [result] = await conn2.query(query, [petitionId, petitionId]);
         conn2.release();
         return result;
@@ -358,7 +358,7 @@ exports.removeSignature = async function(petitionId, authToken){
             return 403; // Forbidden
         } else {
             const conn3 = await db.getPool().getConnection();
-            const query = 'DELETE FROM Signature s WHERE s.petition_id = ? AND s.signatory_id = ?';
+            const query = 'DELETE FROM Signature WHERE petition_id = ? AND signatory_id = ?';
             const [result] = await conn3.query(query, [petitionId, userId]);
             conn3.release();
             return result;
