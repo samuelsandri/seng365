@@ -340,7 +340,11 @@ exports.getPetitionSignatures = async function(petitionId){
         return 404; // Not Found
     } else {
         const conn2 = await db.getPool().getConnection();
-        const query = 'SELECT * FROM Signature s WHERE s.petition_id = ? ORDER BY s.signed_date';
+        const query = 'SELECT s.signatory_id AS signatoryId, u.name, u.city, u.country, s.signed_date AS signedDate ' +
+            'FROM Signature s ' +
+            'JOIN User u ON s.signatory_id = u.user_id ' +
+            'WHERE s.petition_id = ? ' +
+            'ORDER BY s.signed_date';
         const [result] = await conn2.query(query, [petitionId]);
         conn2.release();
         return result;

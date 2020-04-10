@@ -141,7 +141,6 @@ exports.getPetitionPhoto = async function(req, res){
                 .send(result.image);
         }
     } catch( err ) {
-        console.log(err);
         res.status(500)
             .send("Internal Server Error");
     }
@@ -166,7 +165,6 @@ exports.setPetitionPhoto = async function(req, res){
                 .send("Created");
         }
     } catch( err ) {
-        console.log(err);
         res.status(500)
             .send("Internal Server Error");
     }
@@ -186,7 +184,6 @@ exports.getPetitionSignatures = async function(req, res){
                 .send(result);
         }
     } catch( err ) {
-        console.log(err);
         res.status(500)
             .send("Internal Server Error");
     }
@@ -207,7 +204,6 @@ exports.signPetition = async function(req, res){
                 .send("Created");
         }
     } catch( err ) {
-        console.log(err);
         res.status(500)
             .send("Internal Server Error");
     }
@@ -228,7 +224,6 @@ exports.removeSignature = async function(req, res){
                 .send("Ok");
         }
     } catch( err ) {
-        console.log(err);
         res.status(500)
             .send("Internal Server Error");
     }
