@@ -38,12 +38,12 @@ exports.getPetitions = async function(startIndex, count, q, categoryId, authorId
                 query += " AND p.author_id = \"" + authorId + "\"";
             }
         } else if (categoryId !== undefined) {
-            query += " AND p.category_id = \"" + categoryId + "\"";
+            query += " p.category_id = \"" + categoryId + "\"";
             if (authorId !== undefined) {
                 query += " AND p.author_id = \"" + authorId + "\"";
             }
         } else {
-            query += " AND p.author_id = \"" + authorId + "\"";
+            query += " p.author_id = \"" + authorId + "\"";
         }
     }
     // Ordering
@@ -64,6 +64,8 @@ exports.getPetitions = async function(startIndex, count, q, categoryId, authorId
     } else if (startIndex !== undefined) {
         query += " LIMIT " + startIndex + ", 18446744073709551615";
     }
+
+    console.log(query);
 
     const [rows] = await conn.query( query );
     conn.release();
