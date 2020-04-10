@@ -65,8 +65,6 @@ exports.getPetitions = async function(startIndex, count, q, categoryId, authorId
         query += " LIMIT " + startIndex + ", 18446744073709551615";
     }
 
-    console.log(query);
-
     const [rows] = await conn.query( query );
     conn.release();
 
@@ -358,32 +356,34 @@ exports.signPetition = async function(petitionId, authToken){
 
     const queryPetition = 'SELECT * FROM Petition p WHERE p.petition_id = ?';
     const [petition] = await conn.query(queryPetition, [petitionId]);
+    console.log(petition);
 
     const queryUser = 'SELECT u.user_id FROM User u WHERE u.auth_token = ?';
     const [user] = await conn.query(queryUser, [authToken]);
-
-    conn.release();
+    console.log(user);
 
     if (petition.length === 0) {
+        conn.release();
         return 404; // Not Found
     } else if (user.length === 0) {
+        conn.release();
         return 401; //Unauthorized
     } else {
         let userId = user[0].user_id;
         let currentDate = new Date(Date.now());
 
-        const conn2 = await db.getPool().getConnection();
         const querySignedAlready = 'SELECT * FROM Signature s WHERE s.petition_id = ? AND s.signatory_id = ?';
-        const [signedAlready] = await conn2.query(querySignedAlready, [petitionId, userId]);
-        conn2.release();
+        const [signedAlready] = await conn.query(querySignedAlready, [petitionId, userId]);
+        console.log(signedAlready);
 
         if (signedAlready.length !== 0 || new Date(petition[0].closing_date) < currentDate) {
+            conn.release();
             return 403; // Forbidden
         } else {
-            const conn3 = await db.getPool().getConnection();
             const query = 'INSERT INTO Signature (signatory_id, petition_id, signed_date) VALUES (?, ?, ?)';
-            const [result] = await conn3.query(query, [userId, petitionId, currentDate]);
-            conn3.release();
+            const [result] = await conn.query(query, [userId, petitionId, currentDate]);
+            console.log(result);
+            conn.release();
             return result;
         }
     }
