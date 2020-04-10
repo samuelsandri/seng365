@@ -85,7 +85,7 @@ exports.updatePetition = async function(req, res){
             responseHandler.sendErrorResponse(res, result);
         } else {
             res.status(200)
-                .send(result);
+                .send('Ok');
         }
     } catch (err) {
         res.status(500)

@@ -149,7 +149,7 @@ exports.updatePetition = async function(petitionId, title, description, category
     const conn = await db.getPool().getConnection();
 
     const queryCategory = 'SELECT c.category_id FROM Category c WHERE c.category_id = ?';
-    const [category] = await  conn.query(queryCategory, [categoryId]);
+    const [category] = await conn.query(queryCategory, [categoryId]);
 
     const queryUser = 'SELECT u.user_id FROM User u WHERE u.auth_token = ?';
     const [user] = await conn.query(queryUser, [authToken]);
@@ -157,25 +157,62 @@ exports.updatePetition = async function(petitionId, title, description, category
     const queryPetition = 'SELECT * FROM Petition p WHERE p.petition_id = ?';
     const [petition] = await conn.query(queryPetition, [petitionId]);
 
-    conn.release();
-
     if (petition.length === 0) {
+        conn.release();
         return 404; // Not Found
     } else if (user.length === 0) {
-        return 401;
+        conn.release();
+        return 401; // Unauthorized
     } else {
-        const createdDate = new Date(petition.created_date);
         const oldClosingDate = new Date(petition.closing_date);
-        if (currentDate > oldClosingDate) {
+        if (currentDate > oldClosingDate || (closingDate !== undefined && currentDate > new Date(closingDate))) {
+            conn.release();
             return 403; // Forbidden
-        } else if (currentDate > new Date(closingDate) || category.length === 0) {
+        } else if (categoryId !== undefined && category.length === 0) {
+            conn.release();
             return 400; //Bad Request
         } else {
             const userId = user[0].user_id;
-            const conn2 = await db.getPool().getConnection();
-            const query = 'UPDATE Petition p SET (title, description, author_id, category_id, created_date, closing_date) VALUES ( ?, ?, ?, ?, ?, ? ) WHERE p.petition_id = ?';
-            const [result] = await conn2.query(query, [title, description, userId, categoryId, createdDate, closingDate]);
-            conn2.release();
+
+            let first = true;
+            let query = 'UPDATE Petition p SET';
+            if (title !== undefined) {
+                if (first) {
+                    first = false;
+                } else {
+                    query += ','
+                }
+                query += ' title = "' + title + '"';
+            }
+            if (description !== undefined) {
+                if (first) {
+                    first = false;
+                } else {
+                    query += ','
+                }
+                query += ' description = "' + description + '"';
+            }
+            if (categoryId !== undefined) {
+                if (first) {
+                    first = false;
+                } else {
+                    query += ','
+                }
+                query += ' category_id = "' + categoryId + '"';
+            }
+            if (closingDate !== undefined) {
+                if (first) {
+                    first = false;
+                } else {
+                    query += ','
+                }
+                query += ' closing_date = "' + new Date(closingDate) + '"';
+            }
+
+            query += ' WHERE p.petition_id = ?';
+            const [result] = await conn.query(query, [petitionId]);
+
+            conn.release();
             return result;
         }
     }
