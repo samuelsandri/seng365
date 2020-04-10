@@ -100,7 +100,7 @@ exports.deletePetition = async function(req, res){
     const petitionId = req.params.id;
 
     try {
-        const result = await petitions.updatePetition(petitionId, userToken);
+        const result = await petitions.deletePetition(petitionId, userToken);
         if (responseHandler.resultIsError(result)) {
             responseHandler.sendErrorResponse(res, result);
         } else {
