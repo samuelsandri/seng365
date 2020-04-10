@@ -2,6 +2,8 @@ const db = require('../../config/db');
 var fs = require('mz/fs');
 var mime = require('mime-types');
 
+const photoDirectory = './storage/photos/';
+
 /**
  * Gets all petitions filtered by certain values
  * @param startIndex
@@ -61,7 +63,11 @@ exports.getPetitions = async function(startIndex, count, q, categoryId, authorId
     const [rows] = await conn.query( query );
     conn.release();
 
-    return rows;
+    if (rows.length === 0) {
+        return 400;
+    } else {
+        return rows;
+    }
 };
 
 /**
@@ -76,28 +82,31 @@ exports.getPetitions = async function(startIndex, count, q, categoryId, authorId
 exports.newPetition = async function(title, description, categoryId, closingDate, authToken){
     console.log("Request to add new petition to the database");
 
-    let createdDate = new Date(Date.now());
-    const conn = await db.getPool().getConnection();
-
-    const queryCategory = 'SELECT c.category_id FROM Category c WHERE c.category_id = ?';
-    const [result3] = await  conn.query(queryCategory, [categoryId]);
-
-    const queryUser = 'SELECT u.user_id FROM User u WHERE u.auth_token = ?';
-    const [result] = await conn.query(queryUser, [authToken]);
-
-    conn.release();
-
-    if (createdDate > new Date(closingDate) || result3.length === 0) {
-        return 1;
-    } else if (result.length !== 0) {
-        const userId = result[0].user_id;
-        const conn2 = await db.getPool().getConnection();
-        const query = 'INSERT INTO Petition (title, description, author_id, category_id, created_date, closing_date) VALUES ( ?, ?, ?, ?, ?, ? )';
-        const [result2] = await conn2.query(query, [title, description, userId, categoryId, createdDate, closingDate]);
-        conn2.release();
-        return result2.insertId;
+    if (title === undefined || description === undefined || categoryId === undefined) {
+        return 400;
     } else {
-        return 0;
+        let createdDate = new Date(Date.now());
+        const conn = await db.getPool().getConnection();
+
+        const queryCategory = 'SELECT c.category_id FROM Category c WHERE c.category_id = ?';
+        const [category] = await conn.query(queryCategory, [categoryId]);
+
+        const queryUser = 'SELECT u.user_id FROM User u WHERE u.auth_token = ?';
+        const [user] = await conn.query(queryUser, [authToken]);
+
+        if (createdDate > new Date(closingDate) || category.length === 0) {
+            conn.release();
+            return 400;
+        } else if (user.length === 0) {
+            conn.release();
+            return 401;
+        } else {
+            const userId = user[0].user_id;
+            const query = 'INSERT INTO Petition (title, description, author_id, category_id, created_date, closing_date) VALUES ( ?, ?, ?, ?, ?, ? )';
+            const [result] = await conn.query(query, [title, description, userId, categoryId, createdDate, closingDate]);
+            conn.release();
+            return result.insertId;
+        }
     }
 };
 
@@ -113,7 +122,12 @@ exports.getPetition = async function(petitionId){
     const query = 'SELECT * FROM Petition p WHERE p.petition_id = ?';
     const [result] = await conn.query(query, [petitionId]);
     conn.release();
-    return result[0];
+
+    if (result.length === 0) {
+        return 404;
+    } else {
+        return result[0];
+    }
 };
 
 exports.updatePetition = async function(petitionId, title, description, categoryId, closingDate, authToken){
@@ -135,6 +149,8 @@ exports.updatePetition = async function(petitionId, title, description, category
 
     if (petition.length === 0) {
         return 404; // Not Found
+    } else if (user.length === 0) {
+        return 401;
     } else {
         const createdDate = new Date(petition.created_date);
         const oldClosingDate = new Date(petition.closing_date);
@@ -142,15 +158,13 @@ exports.updatePetition = async function(petitionId, title, description, category
             return 403; // Forbidden
         } else if (currentDate > new Date(closingDate) || category.length === 0) {
             return 400; //Bad Request
-        } else if (user.length !== 0) {
+        } else {
             const userId = user[0].user_id;
             const conn2 = await db.getPool().getConnection();
             const query = 'UPDATE Petition p SET (title, description, author_id, category_id, created_date, closing_date) VALUES ( ?, ?, ?, ?, ?, ? ) WHERE p.petition_id = ?';
             const [result] = await conn2.query(query, [title, description, userId, categoryId, createdDate, closingDate]);
             conn2.release();
             return result;
-        } else {
-            return 401; // Unauthorized
         }
     }
 };
@@ -204,9 +218,8 @@ exports.getPetitionPhoto = async function(petitionId){
         return 404; // Not Found
     } else {
         const filename = petition[0].photo_filename;
-        const photosDirectory = './storage/photos/';
-        if (await fs.exists(photosDirectory + filename)) {
-            const image = await fs.readFile(photosDirectory + filename);
+        if (await fs.exists(photoDirectory + filename)) {
+            const image = await fs.readFile(photoDirectory + filename);
             const mimeType = mime.lookup(filename);
             return {image, mimeType};
         } else {
@@ -215,7 +228,7 @@ exports.getPetitionPhoto = async function(petitionId){
     }
 };
 
-exports.setPetitionPhoto = async function(petitionId, authToken){
+exports.setPetitionPhoto = async function(petitionId, authToken, contentType, request){
     console.log(`Request to set photo for petition ${petitionId}`);
 
     const conn = await db.getPool().getConnection();
@@ -226,24 +239,129 @@ exports.setPetitionPhoto = async function(petitionId, authToken){
     const queryPetition = 'SELECT * FROM Petition p WHERE p.petition_id = ?';
     const [petition] = await conn.query(queryPetition, [petitionId]);
 
+    conn.release();
+
     if (petition.length === 0) {
         return 404; // Not Found
-    } else if (user.length === 0 || user[0].user_id !== petition.author_id) {
+    } else if (user.length === 0 || user[0].user_id !== petition[0].author_id) {
         return 401; //Unauthorized
+    } else {
+        let code;
+        if (petition.photo_filename === null) {
+            code = 201;
+        } else {
+            code = 200;
+        }
+        let imageType;
+        if (contentType === "image/jpeg") {
+            imageType = ".jpg";
+        } else if (contentType === "image/png") {
+            imageType = ".png";
+        } else {
+            imageType = ".gif";
+        }
+        let filename = "petition_" + petitionId + imageType;
+        request.pipe(fs.createWriteStream(photoDirectory + filename));
+
+        const conn2 = await db.getPool().getConnection();
+        const query = 'UPDATE Petition p SET photo_filename = ? WHERE p.petition_id = ?';
+        const [result] = await conn2.query(query, [filename, petitionId]);
+        conn2.release();
+        return code;
     }
+};
+
+exports.getPetitionSignatures = async function(petitionId){
+    console.log(`Request to get signatures for petition ${petitionId}`);
+
+    const conn = await db.getPool().getConnection();
+    const queryPetition = 'SELECT * FROM Petition p WHERE p.petition_id = ?';
+    const [petition] = await conn.query(queryPetition, [petitionId]);
+    conn.release();
+
+    if (petition.length === 0) {
+        return 404; // Not Found
+    } else {
+        const conn2 = await db.getPool().getConnection();
+        const query = 'SELECT * FROM Signature s WHERE s.petition_id = ? ORDER BY s.signed_date';
+        const [result] = await conn2.query(query, [petitionId]);
+        conn2.release();
+        return result;
+    }
+};
+
+exports.signPetition = async function(petitionId, authToken){
+    console.log(`Request to sign petition ${petitionId}`);
+
+    const conn = await db.getPool().getConnection();
+
+    const queryPetition = 'SELECT * FROM Petition p WHERE p.petition_id = ?';
+    const [petition] = await conn.query(queryPetition, [petitionId]);
+
+    const queryUser = 'SELECT u.user_id FROM User u WHERE u.auth_token = ?';
+    const [user] = await conn.query(queryUser, [authToken]);
 
     conn.release();
 
+    if (petition.length === 0) {
+        return 404; // Not Found
+    } else if (user.length === 0) {
+        return 401; //Unauthorized
+    } else {
+        let userId = user[0].user_id;
+        let currentDate = new Date(Date.now());
+
+        const conn2 = await db.getPool().getConnection();
+        const querySignedAlready = 'SELECT * FROM Signature s WHERE s.petition_id = ? AND s.signatory_id = ?';
+        const [signedAlready] = await conn2.query(querySignedAlready, [petitionId, userId]);
+        conn2.release();
+
+        if (signedAlready.length !== 0 || new Date(petition[0].closing_date) < currentDate) {
+            return 403; // Forbidden
+        } else {
+            const conn3 = await db.getPool().getConnection();
+            const query = 'INSERT INTO Signature (signatory_id, petition_id, signed_date) VALUES (?, ?, ?)';
+            const [result] = await conn3.query(query, [userId, petitionId, currentDate]);
+            conn3.release();
+            return result;
+        }
+    }
 };
 
-exports.getPetitionSignatures = async function(){
-    return null;
-};
+exports.removeSignature = async function(petitionId, authToken){
+    console.log(`Request to remove signature from petition ${petitionId}`);
 
-exports.signPetition = async function(){
-    return null;
-};
+    const conn = await db.getPool().getConnection();
 
-exports.removeSignature = async function(){
-    return null;
+    const queryPetition = 'SELECT * FROM Petition p WHERE p.petition_id = ?';
+    const [petition] = await conn.query(queryPetition, [petitionId]);
+
+    const queryUser = 'SELECT u.user_id FROM User u WHERE u.auth_token = ?';
+    const [user] = await conn.query(queryUser, [authToken]);
+
+    conn.release();
+
+    if (petition.length === 0) {
+        return 404; // Not Found
+    } else if (user.length === 0) {
+        return 401; //Unauthorized
+    } else {
+        let userId = user[0].user_id;
+        let currentDate = new Date(Date.now());
+
+        const conn2 = await db.getPool().getConnection();
+        const querySignedAlready = 'SELECT * FROM Signature s WHERE s.petition_id = ? AND s.signatory_id = ?';
+        const [signedAlready] = await conn2.query(querySignedAlready, [petitionId, userId]);
+        conn2.release();
+
+        if (signedAlready.length === 0 || new Date(petition[0].closing_date) < currentDate || petition[0].author_id === userId) {
+            return 403; // Forbidden
+        } else {
+            const conn3 = await db.getPool().getConnection();
+            const query = 'DELETE FROM Signature s WHERE s.petition_id = ? AND s.signatory_id = ?';
+            const [result] = await conn3.query(query, [petitionId, userId]);
+            conn3.release();
+            return result;
+        }
+    }
 };

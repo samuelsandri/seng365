@@ -1,4 +1,5 @@
 const petitions = require('../models/petitions.model');
+const responseHandler = require('../middleware/response.middleware');
 
 exports.getPetitions = async function(req, res){
     console.log( 'Request to get all petitions' );
@@ -12,11 +13,15 @@ exports.getPetitions = async function(req, res){
 
     try {
         const result = await petitions.getPetitions(startIndex, count, q, categoryId, authorId, sortBy);
-        res.status( 200 )
-            .send( result );
-    } catch( err ) {
-        res.status( 500 )
-            .send( "Internal Server Error" );
+        if (responseHandler.resultIsError(result)) {
+            responseHandler.sendErrorResponse(res, result);
+        } else {
+            res.status(200)
+                .send(result);
+        }
+    } catch (err) {
+        res.status(500)
+            .send("Internal Server Error");
     }
 };
 
@@ -30,26 +35,17 @@ exports.newPetition = async function(req, res){
     const categoryId = req.body.categoryId;
     const closingDate = req.body.closingDate;
 
-    if (title === undefined || description === undefined || categoryId === undefined) {
-        res.status( 400 )
-            .send( 'Bad Request' );
-    } else {
-        try {
-            const result = await petitions.newPetition(title, description, categoryId, closingDate, userToken);
-            if (result === 0) {
-                res.status(401)
-                    .send('Unauthorised');
-            } else if (result === 1) {
-                res.status(400)
-                    .send('Bad Request');
-            } else {
-                res.status(201)
-                    .send({petitionId: result});
-            }
-        } catch (err) {
-            res.status(500)
-                .send("Internal Server Error");
+    try {
+        const result = await petitions.newPetition(title, description, categoryId, closingDate, userToken);
+        if (responseHandler.resultIsError(result)) {
+            responseHandler.sendErrorResponse(res, result);
+        } else {
+            res.status(201)
+                .send({petitionId: result});
         }
+    } catch (err) {
+        res.status(500)
+            .send("Internal Server Error");
     }
 };
 
@@ -60,12 +56,11 @@ exports.getPetition = async function(req, res){
 
     try {
         const result = await petitions.getPetition(petitionId);
-        if (result.length !== 0) {
+        if (responseHandler.resultIsError(result)) {
+            responseHandler.sendErrorResponse(res, result);
+        } else {
             res.status( 200 )
                 .send( result );
-        } else {
-            res.status(404)
-                .send("Not Found");
         }
     } catch (err) {
         res.status(500)
@@ -86,18 +81,8 @@ exports.updatePetition = async function(req, res){
 
     try {
         const result = await petitions.updatePetition(petitionId, title, description, categoryId, closingDate, userToken);
-        if (result === 404) {
-            res.status(404)
-                .send("Not Found");
-        } else if (result === 403) {
-            res.status(403)
-                .send("Forbidden");
-        } else if (result === 400) {
-            res.status(400)
-                .send("Bad Request");
-        } else if (result === 401) {
-            res.status(401)
-                .send("Unauthorized");
+        if (responseHandler.resultIsError(result)) {
+            responseHandler.sendErrorResponse(res, result);
         } else {
             res.status(200)
                 .send(result);
@@ -116,12 +101,8 @@ exports.deletePetition = async function(req, res){
 
     try {
         const result = await petitions.updatePetition(petitionId, userToken);
-        if (result === 404) {
-            res.status(404)
-                .send("Not Found");
-        } else if (result === 401) {
-            res.status(401)
-                .send("Unauthorized");
+        if (responseHandler.resultIsError(result)) {
+            responseHandler.sendErrorResponse(res, result);
         } else {
             res.status(200)
                 .send("Ok");
@@ -146,15 +127,14 @@ exports.getPetitionCategories = async function(req, res){
 };
 
 exports.getPetitionPhoto = async function(req, res){
-    console.log( 'Request to get petition photo' );
+    console.log('Request to get petition photo');
 
     const petitionId = req.params.id;
 
     try {
         const result = await petitions.getPetitionPhoto(petitionId);
-        if (result === 404) {
-            res.status(404)
-                .send("Not Found");
+        if (responseHandler.resultIsError(result)) {
+            responseHandler.sendErrorResponse(res, result);
         } else {
             res.status(200)
                 .contentType(result.mimeType)
@@ -168,17 +148,88 @@ exports.getPetitionPhoto = async function(req, res){
 };
 
 exports.setPetitionPhoto = async function(req, res){
-    return null;
+    console.log('Request to set petition photo');
+
+    const petitionId = req.params.id;
+    const userToken = req.header("X-Authorization");
+    const contentType = req.header("Content-Type");
+
+    try {
+        const result = await petitions.setPetitionPhoto(petitionId, userToken, contentType, req);
+        if (responseHandler.resultIsError(result)) {
+            responseHandler.sendErrorResponse(res, result);
+        } else if (result === 200) {
+            res.status(200)
+                .send("Ok");
+        } else {
+            res.status(201)
+                .send("Created");
+        }
+    } catch( err ) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.getPetitionSignatures = async function(req, res){
-    return null;
+    console.log('Request to get petition signatures');
+
+    const petitionId = req.params.id;
+
+    try {
+        const result = await petitions.getPetitionSignatures(petitionId);
+        if (responseHandler.resultIsError(result)) {
+            responseHandler.sendErrorResponse(res, result);
+        } else {
+            res.status(200)
+                .send(result);
+        }
+    } catch( err ) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.signPetition = async function(req, res){
-    return null;
+    console.log('Request to sign petition');
+
+    const petitionId = req.params.id;
+    const userToken = req.header("X-Authorization");
+
+    try {
+        const result = await petitions.signPetition(petitionId, userToken);
+        if (responseHandler.resultIsError(result)) {
+            responseHandler.sendErrorResponse(res, result);
+        } else {
+            res.status(201)
+                .send("Created");
+        }
+    } catch( err ) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.removeSignature = async function(req, res){
-    return null;
+    console.log('Request to remove signature from petition');
+
+    const petitionId = req.params.id;
+    const userToken = req.header("X-Authorization");
+
+    try {
+        const result = await petitions.removeSignature(petitionId, userToken);
+        if (responseHandler.resultIsError(result)) {
+            responseHandler.sendErrorResponse(res, result);
+        } else {
+            res.status(200)
+                .send("Ok");
+        }
+    } catch( err ) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
