@@ -236,6 +236,8 @@ exports.deletePetition = async function(petitionId, authToken){
         return 404; // Not Found
     } else if (user.length === 0) {
         return 401; // Unauthorised
+    } else if (user[0].user_id !== petition[0].author_id) {
+        return 403;
     } else {
         const conn2 = await db.getPool().getConnection();
         const query = 'DELETE FROM Petition WHERE petition_id = ?; DELETE FROM Signature WHERE petition_id = ?';
