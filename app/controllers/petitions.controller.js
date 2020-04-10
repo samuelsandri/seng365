@@ -204,6 +204,7 @@ exports.signPetition = async function(req, res){
                 .send("Created");
         }
     } catch( err ) {
+        console.log(err);
         res.status(500)
             .send("Internal Server Error");
     }
@@ -224,6 +225,7 @@ exports.removeSignature = async function(req, res){
                 .send("Ok");
         }
     } catch( err ) {
+        console.log(err);
         res.status(500)
             .send("Internal Server Error");
     }
