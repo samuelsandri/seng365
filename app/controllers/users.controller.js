@@ -88,21 +88,114 @@ exports.logoutUser = async function(req, res) {
 };
 
 exports.getUser = async function(req, res) {
-    return null;
+    console.log('Request to get user');
+
+    const authToken = req.header("X-Authorization");
+    const userId = req.params.id;
+
+    try {
+        const result = await users.getUser(userId, authToken);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
+        } else {
+            res.status(200)
+                .send(result);
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.updateUser = async function(req, res) {
-    return null;
+    console.log('Request to update user');
+
+    const authToken = req.header("X-Authorization");
+    const userId = req.params.id;
+    const name = req.body.name;
+    const email = req.body.email;
+    const password = req.body.password;
+    const currentPassword = req.body.currentPassword;
+    const city = req.body.city;
+    const country = req.body.country;
+
+    try {
+        const result = await users.updateUser(userId, name, email, password, currentPassword, city, country, authToken);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
+        } else {
+            res.status(200)
+                .send('Ok');
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.getUserPhoto = async function(req, res) {
-    return null;
+    console.log('Request to get user photo');
+
+    const userId = req.params.id;
+
+    try {
+        const result = await users.getUserPhoto(userId);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
+        } else {
+            res.status(200)
+                .send(result);
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.setUserPhoto = async function(req, res) {
-    return null;
+    console.log('Request to set user photo');
+
+    const authToken = req.header("X-Authorization");
+    const userId = req.params.id;
+
+    try {
+        const result = await users.setUserPhoto(userId, authToken, req);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
+        } else if (result === 200) {
+            res.status(200)
+                .send(result);
+        } else {
+            res.status(201)
+                .send(result);
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.deleteUserPhoto = async function(req, res) {
-    return null;
+    console.log('Request to delete user photo');
+
+    const authToken = req.header("X-Authorization");
+    const userId = req.params.id;
+
+    try {
+        const result = await users.deleteUserPhoto(userId, authToken);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
+        } else {
+            res.status(200)
+                .send('Ok');
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
