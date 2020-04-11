@@ -152,9 +152,10 @@ exports.setPetitionPhoto = async function(req, res){
     const petitionId = req.params.id;
     const userToken = req.header("X-Authorization");
     const contentType = req.header("Content-Type");
+    const image = req.body;
 
     try {
-        const result = await petitions.setPetitionPhoto(petitionId, userToken, contentType, req);
+        const result = await petitions.setPetitionPhoto(petitionId, userToken, contentType, image);
         if (responseHandler.resultIsError(result)) {
             responseHandler.sendErrorResponse(res, result);
         } else if (result === 200) {

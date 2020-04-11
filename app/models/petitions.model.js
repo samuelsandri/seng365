@@ -278,7 +278,7 @@ exports.getPetitionPhoto = async function(petitionId){
     }
 };
 
-exports.setPetitionPhoto = async function(petitionId, authToken, contentType, request){
+exports.setPetitionPhoto = async function(petitionId, authToken, contentType, image){
     console.log(`Request to set photo for petition ${petitionId}`);
 
     const conn = await db.getPool().getConnection();
@@ -316,7 +316,7 @@ exports.setPetitionPhoto = async function(petitionId, authToken, contentType, re
                 code = 200;
             }
             let filename = "petition_" + petitionId + imageType;
-            request.pipe(fs.createWriteStream(photoDirectory + filename));
+            fs.writeFile(photoDirectory + filename, image);
 
             const conn2 = await db.getPool().getConnection();
             const query = 'UPDATE Petition p SET photo_filename = ? WHERE p.petition_id = ?';
