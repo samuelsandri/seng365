@@ -297,32 +297,22 @@ exports.setPetitionPhoto = async function(petitionId, authToken, contentType, im
         return 401; //Unauthorized
     } else if (user[0].user_id !== petition[0].author_id) {
         return 403;
+    } else if (contentType !== "image/jpeg" && contentType !== "image/png" && contentType !== "image/gif") {
+        return 400;
     } else {
-        let imageType = null;
-        if (contentType === "image/jpeg") {
-            imageType = ".jpg";
-        } else if (contentType === "image/png") {
-            imageType = ".png";
-        } else if (contentType === "image/gif") {
-            imageType = ".gif";
-        }
-        if (imageType === null) {
-            return 400;
-        } else {
-            let code;
-            if (petition[0].photo_filename === null) {
-                code = 201;
-            } else {
-                code = 200;
-            }
-            let filename = "petition_" + petitionId + imageType;
-            fs.writeFile(photoDirectory + filename, image);
+        let imageType = '.' + contentType.slice(6);
+        let filename = "petition_" + petitionId + imageType;
+        fs.writeFile(photoDirectory + filename, image);
 
-            const conn2 = await db.getPool().getConnection();
-            const query = 'UPDATE Petition p SET photo_filename = ? WHERE p.petition_id = ?';
-            const [result] = await conn2.query(query, [filename, petitionId]);
-            conn2.release();
-            return code;
+        const conn2 = await db.getPool().getConnection();
+        const query = 'UPDATE Petition p SET photo_filename = ? WHERE p.petition_id = ?';
+        const [result] = await conn2.query(query, [filename, petitionId]);
+        conn2.release();
+
+        if (petition[0].photo_filename === null) {
+            return 201;
+        } else {
+            return 200;
         }
     }
 };
