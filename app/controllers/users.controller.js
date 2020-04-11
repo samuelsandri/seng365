@@ -23,15 +23,68 @@ sendErrorResponse = async function(res, result) {
 };
 
 exports.createUser = async function(req, res) {
-    return null;
+    console.log('Request to create new user');
+
+    const name = req.body.name;
+    const email = req.body.email;
+    const password = req.body.password;
+    const city = req.body.city;
+    const country = req.body.country;
+
+    try {
+        const result = await users.createUser(name, email, password, city, country);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
+        } else {
+            res.status(201)
+                .send(result);
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.loginUser = async function(req, res) {
-    return null;
+    console.log('Request to log in user');
+
+    const email = req.body.email;
+    const password = req.body.password;
+
+    try {
+        const result = await users.loginUser(email, password);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
+        } else {
+            res.status(200)
+                .send(result);
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.logoutUser = async function(req, res) {
-    return null;
+    console.log('Request to log out user');
+
+    const authToken = req.header("X-Authorization");
+
+    try {
+        const result = await users.loginUser(authToken);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
+        } else {
+            res.status(200)
+                .send('Ok');
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500)
+            .send("Internal Server Error");
+    }
 };
 
 exports.getUser = async function(req, res) {
