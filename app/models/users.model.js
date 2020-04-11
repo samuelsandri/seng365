@@ -98,19 +98,36 @@ exports.updateUser = async function(userId, name, email, password, currentPasswo
     const userWithEmailQuery = 'SELECT * FROM User u WHERE u.email = ?';
     const [userWithEmail] = await conn.query(userWithEmailQuery, [email]);
 
-    if (!email.includes('@') || password === undefined || name === undefined || password === ""
-        || name === "" || user.length === 0) {
+    let first = true;
+    let updateQuery = 'UPDATE User u SET';
+    let addToQuery = function (first, query, attr, val) {
+        if (val !== undefined) {
+            if (first) {
+                first = false;
+            } else {
+                query += ',';
+            }
+            query += ' ' + attr + ' = "' + val + '"';
+        }
+        return [first, query];
+    };
+    [first, updateQuery] = addToQuery(first, updateQuery, 'name', name);
+    [first, updateQuery] = addToQuery(first, updateQuery, 'email', email);
+    [first, updateQuery] = addToQuery(first, updateQuery, 'city', city);
+    [first, updateQuery] = addToQuery(first, updateQuery, 'country', country);
+    updateQuery += ' WHERE u.user_id = ?';
+
+    if ((email !== undefined && !email.includes('@')) || user.length === 0) {
         conn.release();
-        return 400;
-    } else if (userRequesting.length === 0 || (password !== currentPassword && user[0].password !== currentPassword)) {
+        return 400; // Bad request
+    } else if (userRequesting.length === 0 || (password !== undefined && password !== currentPassword && user[0].password !== currentPassword)) {
         conn.release();
-        return 401;
+        return 401; // Unauthorized
     } else if ((userWithEmail.length !== 0 && userWithEmail[0].user_id !== userId) || user[0].auth_token !== userRequesting[0].auth_token) {
         conn.release();
-        return 403;
+        return 403; // Forbidden
     } else {
-        const query = 'UPDATE User u SET (name, email, password, city, country) VALUES (?, ?, ?, ?, ?) WHERE u.user_id = ?';
-        const [result] = await conn.query(query, [name, email, password, city, country, userId]);
+        const [result] = await conn.query(updateQuery, [userId]);
         conn.release();
         return {userId: result.insertId};
     }
