@@ -73,7 +73,7 @@ exports.logoutUser = async function(req, res) {
     const authToken = req.header("X-Authorization");
 
     try {
-        const result = await users.loginUser(authToken);
+        const result = await users.logoutUser(authToken);
         if (await resultIsError(result)) {
             await sendErrorResponse(res, result);
         } else {
