@@ -52,7 +52,7 @@ exports.logoutUser = async function(authToken) {
 
     const conn = await db.getPool().getConnection();
 
-    const userQuery = 'SELECT * FROM User u WHERE u.auth_token';
+    const userQuery = 'SELECT * FROM User u WHERE u.auth_token = ?';
     const [user] = await conn.query(userQuery, [authToken]);
 
     if (user.length === 0) {
@@ -68,11 +68,52 @@ exports.logoutUser = async function(authToken) {
 };
 
 exports.getUser = async function(userId, authToken) {
-    return null;
+    console.log(`Request to get user ${userId}`);
+
+    const conn = await db.getPool().getConnection();
+    const userQuery = 'SELECT name, email, city, country, auth_token FROM User u WHERE u.user_id = ?';
+    const [user] = await conn.query(userQuery, [userId]);
+    conn.release();
+
+    if (user.length === 0) {
+        return 404;
+    } else if (user[0].auth_token === authToken) {
+        return {name: user[0].name, email: user[0].email, city: user[0].city, country: user[0].country};
+    } else {
+        return {name: user[0].name, city: user[0].city, country: user[0].country};
+    }
 };
 
 exports.updateUser = async function(userId, name, email, password, currentPassword, city, country, authToken) {
-    return null;
+    console.log(`Request to update user ${userId}`);
+
+    const conn = await db.getPool().getConnection();
+
+    const userQuery = 'SELECT * FROM User u WHERE u.user_id = ?';
+    const [user] = await conn.query(userQuery, [userId]);
+
+    const userRequestingQuery = 'SELECT * FROM User u WHERE u.auth_token = ?';
+    const [userRequesting] = await conn.query(userRequestingQuery, [authToken]);
+
+    const userWithEmailQuery = 'SELECT * FROM User u WHERE u.email = ?';
+    const [userWithEmail] = await conn.query(userWithEmailQuery, [email]);
+
+    if (!email.includes('@') || password === undefined || name === undefined || password === ""
+        || name === "" || user.length === 0) {
+        conn.release();
+        return 400;
+    } else if (userRequesting.length === 0 || (password !== currentPassword && user[0].password !== currentPassword)) {
+        conn.release();
+        return 401;
+    } else if ((userWithEmail.length !== 0 && userWithEmail[0].user_id !== userId) || user[0].auth_token !== userRequesting[0].auth_token) {
+        conn.release();
+        return 403;
+    } else {
+        const query = 'UPDATE User u SET (name, email, password, city, country) VALUES (?, ?, ?, ?, ?) WHERE u.user_id = ?';
+        const [result] = await conn.query(query, [name, email, password, city, country, userId]);
+        conn.release();
+        return {userId: result.insertId};
+    }
 };
 
 exports.getUserPhoto = async function(userId) {
