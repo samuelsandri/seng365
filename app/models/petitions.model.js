@@ -357,11 +357,9 @@ exports.signPetition = async function(petitionId, authToken){
 
     const queryPetition = 'SELECT * FROM Petition p WHERE p.petition_id = ?';
     const [petition] = await conn.query(queryPetition, [petitionId]);
-    console.log(petition);
 
     const queryUser = 'SELECT u.user_id FROM User u WHERE u.auth_token = ?';
     const [user] = await conn.query(queryUser, [authToken]);
-    console.log(user);
 
     if (petition.length === 0) {
         conn.release();
@@ -375,7 +373,6 @@ exports.signPetition = async function(petitionId, authToken){
 
         const querySignedAlready = 'SELECT * FROM Signature s WHERE s.petition_id = ? AND s.signatory_id = ?';
         const [signedAlready] = await conn.query(querySignedAlready, [petitionId, userId]);
-        console.log(signedAlready);
 
         if (signedAlready.length !== 0 || new Date(petition[0].closing_date) < currentDate) {
             conn.release();
@@ -383,7 +380,6 @@ exports.signPetition = async function(petitionId, authToken){
         } else {
             const query = 'INSERT INTO Signature (signatory_id, petition_id, signed_date) VALUES (?, ?, ?)';
             const [result] = await conn.query(query, [userId, petitionId, currentDate]);
-            console.log(result);
             conn.release();
             return result;
         }
