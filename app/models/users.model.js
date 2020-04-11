@@ -117,7 +117,7 @@ exports.updateUser = async function(userId, name, email, password, currentPasswo
     [first, updateQuery] = addToQuery(first, updateQuery, 'country', country);
     updateQuery += ' WHERE u.user_id = ?';
 
-    if ((email !== undefined && !email.includes('@')) || user.length === 0) {
+    if ((email !== undefined && !email.includes('@')) || user.length === 0 || first) {
         conn.release();
         return 400; // Bad request
     } else if (userRequesting.length === 0 || (password !== undefined && password !== currentPassword && user[0].password !== currentPassword)) {
