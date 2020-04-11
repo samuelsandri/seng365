@@ -134,13 +134,98 @@ exports.updateUser = async function(userId, name, email, password, currentPasswo
 };
 
 exports.getUserPhoto = async function(userId) {
-    return null;
+    console.log(`Request to get photo for user ${userId}`);
+
+    const conn = await db.getPool().getConnection();
+    const queryUser = 'SELECT * FROM User u WHERE u.user_id = ?';
+    const [user] = await conn.query(queryUser, [userId]);
+    conn.release();
+
+    if (user.length === 0) {
+        return 404; // Not Found
+    } else {
+        const filename = user[0].photo_filename;
+        if (await fs.exists(photoDirectory + filename)) {
+            const image = await fs.readFile(photoDirectory + filename);
+            const mimeType = mime.lookup(filename);
+            return {image, mimeType};
+        } else {
+            return 404; // Not Found
+        }
+    }
 };
 
-exports.setUserPhoto = async function(userId, authToken, request) {
-    return null;
+exports.setUserPhoto = async function(userId, authToken, contentType, image) {
+    console.log(`Request to set photo for user ${userId}`);
+
+    const conn = await db.getPool().getConnection();
+
+    const queryUser = 'SELECT * FROM User u WHERE u.user_id = ?';
+    const [user] = await conn.query(queryUser, [userId]);
+    const userRequestingQuery = 'SELECT * FROM User u WHERE u.auth_token = ?';
+    const [userRequesting] = await conn.query(userRequestingQuery, [authToken]);
+
+    conn.release();
+
+    if (user.length === 0) {
+        return 404;
+    } else if (userRequesting.length === 0) {
+        return 401;
+    } else if (user[0].user_id !== userRequesting[0].user_id) {
+        return 403;
+    } else {
+        let imageType = null;
+        if (contentType === "image/jpeg") {
+            imageType = ".jpg";
+        } else if (contentType === "image/png") {
+            imageType = ".png";
+        } else if (contentType === "image/gif") {
+            imageType = ".gif";
+        }
+        if (imageType === null) {
+            return 400;
+        } else {
+            let code;
+            if (user[0].photo_filename === null) {
+                code = 201;
+            } else {
+                code = 200;
+            }
+            let filename = "user_" + userId + imageType;
+            fs.writeFile(photoDirectory + filename, image);
+
+            const conn2 = await db.getPool().getConnection();
+            const query = 'UPDATE User u SET photo_filename = ? WHERE u.user_id = ?';
+            const [result] = await conn2.query(query, [filename, userId]);
+            conn2.release();
+            return code;
+        }
+    }
 };
 
 exports.deleteUserPhoto = async function(userId, authToken) {
-    return null;
+    console.log(`Request to delete photo for user ${userId}`);
+
+    const conn = await db.getPool().getConnection();
+
+    const queryUser = 'SELECT * FROM User u WHERE u.user_id = ?';
+    const [user] = await conn.query(queryUser, [userId]);
+    const userRequestingQuery = 'SELECT * FROM User u WHERE u.auth_token = ?';
+    const [userRequesting] = await conn.query(userRequestingQuery, [authToken]);
+
+    conn.release();
+
+    if (user.length === 0) {
+        return 404;
+    } else if (userRequesting.length === 0) {
+        return 401;
+    } else if (user[0].user_id !== userRequesting[0].user_id) {
+        return 403;
+    } else {
+        const conn2 = await db.getPool().getConnection();
+        const query = 'UPDATE User u SET photo_filename = null WHERE u.user_id = ?';
+        const [result] = await conn2.query(query, [userId]);
+        conn2.release();
+        return 200;
+    }
 };

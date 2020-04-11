@@ -146,7 +146,8 @@ exports.getUserPhoto = async function(req, res) {
             await sendErrorResponse(res, result);
         } else {
             res.status(200)
-                .send(result);
+                .contentType(result.mimeType)
+                .send(result.image);
         }
     } catch (err) {
         console.log(err);
@@ -160,17 +161,19 @@ exports.setUserPhoto = async function(req, res) {
 
     const authToken = req.header("X-Authorization");
     const userId = req.params.id;
+    const contentType = req.header("Content-Type");
+    const image = req.body;
 
     try {
-        const result = await users.setUserPhoto(userId, authToken, req);
+        const result = await users.setUserPhoto(userId, authToken, contentType, image);
         if (await resultIsError(result)) {
             await sendErrorResponse(res, result);
         } else if (result === 200) {
             res.status(200)
-                .send(result);
+                .send('Ok');
         } else {
             res.status(201)
-                .send(result);
+                .send('Created');
         }
     } catch (err) {
         console.log(err);

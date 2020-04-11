@@ -310,7 +310,7 @@ exports.setPetitionPhoto = async function(petitionId, authToken, contentType, re
             return 400;
         } else {
             let code;
-            if (petition.photo_filename === null) {
+            if (petition[0].photo_filename === null) {
                 code = 201;
             } else {
                 code = 200;
