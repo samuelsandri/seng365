@@ -1,4 +1,5 @@
 const db = require('../../config/db');
+const passwords = require('../utility/passwords.utility');
 var fs = require('mz/fs');
 var mime = require('mime-types');
 
@@ -17,8 +18,9 @@ exports.createUser = async function(name, email, password, city, country) {
         conn.release();
         return 400;
     } else {
+        const hashedPassword = await passwords.hash(password);
         const query = 'INSERT INTO User (name, email, password, city, country) VALUES (?, ?, ?, ?, ?)';
-        const [result] = await conn.query(query, [name, email, password, city, country]);
+        const [result] = await conn.query(query, [name, email, hashedPassword, city, country]);
         conn.release();
         return {userId: result.insertId};
     }
@@ -32,7 +34,8 @@ exports.loginUser = async function(email, password) {
     const userQuery = 'SELECT * FROM User u WHERE u.email = ?';
     const [user] = await conn.query(userQuery, [email]);
 
-    if (email === undefined || password === undefined || user.length === 0 || user[0].password !== password) {
+    if (email === undefined || password === undefined || user.length === 0
+        || !(await passwords.compare(password, user[0].password))) {
         conn.release();
         return 400;
     } else {
