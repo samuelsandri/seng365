@@ -1,5 +1,26 @@
 const petitions = require('../models/petitions.model');
-const responseHandler = require('../middleware/response.middleware');
+
+const errorCodes = [400, 401, 403, 404];
+
+resultIsError = async function(result) {
+    return errorCodes.includes(result);
+};
+
+sendErrorResponse = async function(res, result) {
+    if (result === 404) {
+        res.status(404)
+            .send("Not Found");
+    } else if (result === 403) {
+        res.status(403)
+            .send("Forbidden");
+    } else if (result === 400) {
+        res.status(400)
+            .send("Bad Request");
+    } else if (result === 401) {
+        res.status(401)
+            .send("Unauthorized");
+    }
+};
 
 exports.getPetitions = async function(req, res){
     console.log( 'Request to get all petitions' );
@@ -13,8 +34,8 @@ exports.getPetitions = async function(req, res){
 
     try {
         const result = await petitions.getPetitions(startIndex, count, q, categoryId, authorId, sortBy);
-        if (responseHandler.resultIsError(result)) {
-            responseHandler.sendErrorResponse(res, result);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
         } else {
             res.status(200)
                 .send(result);
@@ -37,8 +58,8 @@ exports.newPetition = async function(req, res){
 
     try {
         const result = await petitions.newPetition(title, description, categoryId, closingDate, userToken);
-        if (responseHandler.resultIsError(result)) {
-            responseHandler.sendErrorResponse(res, result);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
         } else {
             res.status(201)
                 .send({petitionId: result});
@@ -56,8 +77,8 @@ exports.getPetition = async function(req, res){
 
     try {
         const result = await petitions.getPetition(petitionId);
-        if (responseHandler.resultIsError(result)) {
-            responseHandler.sendErrorResponse(res, result);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
         } else {
             res.status( 200 )
                 .send( result );
@@ -81,8 +102,8 @@ exports.updatePetition = async function(req, res){
 
     try {
         const result = await petitions.updatePetition(petitionId, title, description, categoryId, closingDate, userToken);
-        if (responseHandler.resultIsError(result)) {
-            responseHandler.sendErrorResponse(res, result);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
         } else {
             res.status(200)
                 .send('Ok');
@@ -101,8 +122,8 @@ exports.deletePetition = async function(req, res){
 
     try {
         const result = await petitions.deletePetition(petitionId, userToken);
-        if (responseHandler.resultIsError(result)) {
-            responseHandler.sendErrorResponse(res, result);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
         } else {
             res.status(200)
                 .send("Ok");
@@ -133,8 +154,8 @@ exports.getPetitionPhoto = async function(req, res){
 
     try {
         const result = await petitions.getPetitionPhoto(petitionId);
-        if (responseHandler.resultIsError(result)) {
-            responseHandler.sendErrorResponse(res, result);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
         } else {
             res.status(200)
                 .contentType(result.mimeType)
@@ -156,8 +177,8 @@ exports.setPetitionPhoto = async function(req, res){
 
     try {
         const result = await petitions.setPetitionPhoto(petitionId, userToken, contentType, image);
-        if (responseHandler.resultIsError(result)) {
-            responseHandler.sendErrorResponse(res, result);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
         } else if (result === 200) {
             res.status(200)
                 .send("Ok");
@@ -178,8 +199,8 @@ exports.getPetitionSignatures = async function(req, res){
 
     try {
         const result = await petitions.getPetitionSignatures(petitionId);
-        if (responseHandler.resultIsError(result)) {
-            responseHandler.sendErrorResponse(res, result);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
         } else {
             res.status(200)
                 .send(result);
@@ -198,8 +219,8 @@ exports.signPetition = async function(req, res){
 
     try {
         const result = await petitions.signPetition(petitionId, userToken);
-        if (responseHandler.resultIsError(result)) {
-            responseHandler.sendErrorResponse(res, result);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
         } else {
             res.status(201)
                 .send("Created");
@@ -219,8 +240,8 @@ exports.removeSignature = async function(req, res){
 
     try {
         const result = await petitions.removeSignature(petitionId, userToken);
-        if (responseHandler.resultIsError(result)) {
-            responseHandler.sendErrorResponse(res, result);
+        if (await resultIsError(result)) {
+            await sendErrorResponse(res, result);
         } else {
             res.status(200)
                 .send("Ok");
