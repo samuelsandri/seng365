@@ -3,21 +3,42 @@ import VueRouter from 'vue-router'
 import Login from "@/components/Login";
 import SignUp from "@/components/SignUp";
 import Home from "@/components/Home";
+import Profile from "./components/Profile";
+import Petitions from "./components/Petitions";
+import Petition from "./components/Petition";
 
 Vue.use(VueRouter);
 
 const routes = [
   {
     path: '/login',
-    component: Login
+    component: Login,
+    name: 'Login'
   },
   {
     path: '/signup',
-    component: SignUp
+    component: SignUp,
+    name: 'Sign Up'
   },
   {
     path: '/home',
-    component: Home
+    component: Home,
+    name: 'Home'
+  },
+  {
+    path: '/profile',
+    component: Profile,
+    name: 'Profile'
+  },
+  {
+    path: '/petitions',
+    component: Petitions,
+    name: 'Petitions'
+  },
+  {
+    path: '/petitions/:id',
+    component: Petition,
+    name: 'Petition'
   }
 ];
 

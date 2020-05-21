@@ -29,4 +29,7 @@ export const apiUser = {
   }),
   logout: () => instance.post('/users/logout'),
   getUser: (userId) => instance.get('/users/' + userId),
+  getPetitions: () => instance.get('/petitions'),
+  getPetitionsFiltered: (queryString) => instance.get('/petitions?' + queryString),
+  getCategories: () => instance.get('/petitions/categories'),
 };

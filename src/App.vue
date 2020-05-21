@@ -30,7 +30,7 @@
             <v-list-item-title>Sign Up</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item v-if="user.isLoggedIn" link>
+        <v-list-item v-if="user.isLoggedIn" v-on:click="$router.push('Profile')" link>
           <v-list-item-action>
             <v-icon>mdi-account</v-icon>
           </v-list-item-action>
@@ -38,7 +38,7 @@
             <v-list-item-title>Profile</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item v-if="user.isLoggedIn" link>
+        <v-list-item v-if="user.isLoggedIn" v-on:click="$router.push('Petitions')" link>
           <v-list-item-action>
             <v-icon>mdi-poll</v-icon>
           </v-list-item-action>
@@ -63,7 +63,7 @@
         dark
     >
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>Page Title</v-toolbar-title>
+      <v-toolbar-title>{{this.$route.name}}</v-toolbar-title>
     </v-app-bar>
 
     <v-content>
