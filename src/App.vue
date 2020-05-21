@@ -5,8 +5,9 @@
         app
     >
       <v-label>{{user.name}}</v-label>
+      <v-label>{{user.userId}}</v-label>
       <v-list dense>
-        <v-list-item v-on:click="$router.push('Home')" link>
+        <v-list-item v-on:click="$router.push('/Home')" link>
           <v-list-item-action>
             <v-icon>mdi-home</v-icon>
           </v-list-item-action>
@@ -14,7 +15,7 @@
             <v-list-item-title>Home</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item v-if="!user.isLoggedIn" v-on:click="$router.push('Login')" link>
+        <v-list-item v-if="!user.isLoggedIn" v-on:click="$router.push('/Login')" link>
           <v-list-item-action>
             <v-icon>mdi-login</v-icon>
           </v-list-item-action>
@@ -22,7 +23,7 @@
             <v-list-item-title>Login</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item v-if="!user.isLoggedIn" v-on:click="$router.push('Signup')" link>
+        <v-list-item v-if="!user.isLoggedIn" v-on:click="$router.push('/Signup')" link>
           <v-list-item-action>
             <v-icon>mdi-account-multiple-plus</v-icon>
           </v-list-item-action>
@@ -30,7 +31,7 @@
             <v-list-item-title>Sign Up</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item v-if="user.isLoggedIn" v-on:click="$router.push('Profile')" link>
+        <v-list-item v-if="user.isLoggedIn" v-on:click="$router.push('/Profile')" link>
           <v-list-item-action>
             <v-icon>mdi-account</v-icon>
           </v-list-item-action>
@@ -38,7 +39,7 @@
             <v-list-item-title>Profile</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item v-if="user.isLoggedIn" v-on:click="$router.push('Petitions')" link>
+        <v-list-item v-if="user.isLoggedIn" v-on:click="$router.push('/Petitions')" link>
           <v-list-item-action>
             <v-icon>mdi-poll</v-icon>
           </v-list-item-action>
@@ -95,6 +96,9 @@
     data: () => ({
       drawer: null,
     }),
+    mounted() {
+      this.printInfo();
+    },
     computed: {
       ...mapGetters(["user"]),
     },
@@ -106,6 +110,9 @@
         this.userLogout();
         localStorage.setItem('sessionId', null);
         router.push('Login');
+      },
+      printInfo() {
+        console.log(this.user.userId);
       }
     }
   }

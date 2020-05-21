@@ -6,6 +6,7 @@ import Home from "@/components/Home";
 import Profile from "./components/Profile";
 import Petitions from "./components/Petitions";
 import Petition from "./components/Petition";
+import store from './store/index.js';
 
 Vue.use(VueRouter);
 
@@ -36,12 +37,11 @@ const routes = [
     name: 'Petitions'
   },
   {
-    path: '/petitions/:id',
+    path: '/petitions/:petitionId',
     component: Petition,
     name: 'Petition'
   }
 ];
-
 
 const router = new VueRouter({
   routes,
@@ -49,12 +49,13 @@ const router = new VueRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  if (localStorage.getItem('sessionId') === null && (to.path !== '/signup' || to.path !== '/login')) {
-    next('/login');
-  } else if (localStorage.getItem('sessionId') !== null && (to.path === '/signup' || to.path === '/login')) {
-    next('/home');
+  let toOpenPage = to.path === '/Signup' || to.path === '/Login' || to.path === '/Home';
+  if (!store.getters.isLoggedIn && !toOpenPage) {
+    next('/Login');
+  } else if (store.getters.isLoggedIn && (to.path === '/Signup' || to.path === '/Login')) {
+    next('/Home');
   } else if (to.path === '/') {
-    next('/home');
+    next('/Home');
   } else {
     next();
   }

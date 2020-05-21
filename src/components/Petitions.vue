@@ -28,7 +28,7 @@
     <v-row>
       <v-card tile outlined v-for="(petition, idx) in petitions" v-bind:key="idx">
         <v-card-text>
-          <a v-on:click="goToActivity">{{petition.title}}</a>
+          <a v-on:click="goToPetition(petition.petitionId)">{{petition.title}}</a>
           <br>
           <p>Category: {{petition.category}}<br>Author: {{petition.authorName}}</p>
           <v-row>
@@ -49,7 +49,7 @@
 </template>
 
 <script>
-  import {apiUser} from "../api";
+  import {apiPetition} from "../api";
   import router from "../router";
 
   export default {
@@ -85,12 +85,6 @@
       }
     },
     methods: {
-      getAllPetitions() {
-        apiUser.getPetitions().then(
-            response => {
-              this.petitions = response.data;
-            });
-      },
       getFilteredPetitions() {
         let first = true;
         let queryString = "";
@@ -134,7 +128,7 @@
           queryString += "&"
         }
         queryString += "startIndex=" + ((this.pageNumber - 1) * this.pageAmountShown) + "&count=" + this.pageAmountShown;
-        apiUser.getPetitionsFiltered(queryString).then(
+        apiPetition.getPetitionsFiltered(queryString).then(
             response => {
               this.petitions = response.data;
             });
@@ -149,7 +143,7 @@
         this.getFilteredPetitions();
       },
       getPetitionCategories() {
-        apiUser.getCategories().then(
+        apiPetition.getCategories().then(
             response => {
               for (let category of response.data) {
                 this.categories.push(category.name);
@@ -176,8 +170,8 @@
       },
       lastPage() {
       },
-      goToActivity() {
-        router.push('Petition');
+      goToPetition(petitionId) {
+        router.push('/petitions/' + petitionId);
       },
     }
   }
