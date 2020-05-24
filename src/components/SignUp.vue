@@ -6,35 +6,35 @@
           label="Name"
           required
           outlined
+          clearable
       ></v-text-field>
       <v-text-field
           v-model="user.email"
           label="Email"
           required
           outlined
+          clearable
       ></v-text-field>
       <v-text-field
           v-model="password"
           label="Password"
           required
           outlined
+          clearable
       ></v-text-field>
       <v-text-field
           v-model="user.city"
           label="City"
           required
           outlined
+          clearable
       ></v-text-field>
       <v-text-field
           v-model="user.country"
           label="Country"
           required
           outlined
-      ></v-text-field>
-      <v-text-field
-          label="Profile Picture"
-          required
-          outlined
+          clearable
       ></v-text-field>
       <v-btn v-on:click="createUser">Sign Up</v-btn>
     </v-form>

@@ -35,7 +35,7 @@
       ...mapGetters(["user"]),
     },
     methods: {
-      ...mapActions(['setUserId', 'userLogin', 'createUser']),
+      ...mapActions(['setUserId', 'userLogin', 'createUser', 'setUserProfilePicture']),
       loginUser() {
         apiUser.login(this.email, this.password)
             .then(response => {
@@ -52,7 +52,7 @@
             .then(response => {
               this.createUser(response.data);
         });
-      }
+      },
     }
   }
 </script>

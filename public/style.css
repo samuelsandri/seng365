@@ -1,0 +1,30 @@
+.menuProfileContainer {
+    align-content: center !important;
+    justify-content: center !important;
+    margin: 10px !important;
+}
+
+.menuProfileAvatar {
+    width: 100px !important;
+    height: 100px !important;
+    background-color: lightgray;
+}
+
+.menuItemSelected {
+    background-color: lightgray;
+    color: black !important;
+}
+
+.profileAvatar {
+    width: 200px !important;
+    height: 200px !important;
+    background-color: lightgray;
+}
+
+.profileInfoLabel {
+    margin-bottom: 0 !important;
+}
+
+.editImageButton {
+    margin-top: 5px;
+}

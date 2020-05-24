@@ -57,6 +57,9 @@ const actions = {
   setUserId({commit}, data) {
     commit('setUserId', data);
   },
+  setUserProfilePicture({commit}, data) {
+    commit('setProfilePicture', data);
+  },
   userLogin({commit}) {
     commit('login')
   },

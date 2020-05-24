@@ -32,7 +32,8 @@
           <br>
           <p>Category: {{petition.category}}<br>Author: {{petition.authorName}}</p>
           <v-row>
-            <v-icon>mdi-thumb-up</v-icon>
+            <v-icon v-if="signedPetitions.includes(petition.petitionId)" color="green" v-on:click="toggleSignature(petition.petitionId)">mdi-pencil-outline</v-icon>
+            <v-icon v-if="!signedPetitions.includes(petition.petitionId)" v-on:click="toggleSignature(petition.petitionId)">mdi-pencil-outline</v-icon>
             <h2>{{petition.signatureCount}}</h2>
           </v-row>
         </v-card-text>
@@ -51,6 +52,7 @@
 <script>
   import {apiPetition} from "../api";
   import router from "../router";
+  import {mapGetters} from "vuex";
 
   export default {
     name: "Petitions",
@@ -70,19 +72,25 @@
         chosenSortType: "Number of signatures, most to least",
         pageNumber: 1,
         pageAmountShown: 10,
+        signedPetitions: [],
       }
     },
     mounted() {
       this.getFilteredPetitions();
       this.getPetitionCategories();
+      this.updateSignedPetitions();
     },
     watch: {
       "$route.params": {
         handler() {
           this.getFilteredPetitions();
           this.getPetitionCategories();
+          this.updateSignedPetitions();
         }
       }
+    },
+    computed: {
+      ...mapGetters(["user"]),
     },
     methods: {
       getFilteredPetitions() {
@@ -131,6 +139,7 @@
         apiPetition.getPetitionsFiltered(queryString).then(
             response => {
               this.petitions = response.data;
+              this.updateSignedPetitions();
             });
       },
       isEmptyOrSpaces(str){
@@ -172,6 +181,45 @@
       },
       goToPetition(petitionId) {
         router.push('/petitions/' + petitionId);
+      },
+      updateSignedPetitions() {
+        this.signedPetitions = [];
+        for (let petition of this.petitions) {
+          apiPetition.getPetitionSignatures(petition.petitionId).then(
+              response => {
+                let signatoryIds = [];
+                for (let signatory of response.data) {
+                  signatoryIds.push(signatory.signatoryId)
+                }
+                if (signatoryIds.includes(this.user.userId)) {
+                  this.signedPetitions.push(petition.petitionId);
+                }
+              }
+          );
+        }
+      },
+      toggleSignature(petitionId) {
+        apiPetition.getPetitionSignatures(petitionId).then(
+            response => {
+              let signatoryIds = [];
+              for (let signatory of response.data) {
+                signatoryIds.push(signatory.signatoryId)
+              }
+              if (signatoryIds.includes(this.user.userId)) {
+                apiPetition.deletePetitionSignature(petitionId).then(
+                    () => {
+                      this.getFilteredPetitions();
+                    }
+                );
+              } else {
+                apiPetition.addPetitionSignature(petitionId).then(
+                    () => {
+                      this.getFilteredPetitions();
+                    }
+                );
+              }
+            }
+        );
       },
     }
   }

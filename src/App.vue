@@ -4,10 +4,21 @@
         v-model="drawer"
         app
     >
-      <v-label>{{user.name}}</v-label>
-      <v-label>{{user.userId}}</v-label>
+      <v-container v-if="user.isLoggedIn">
+        <v-row class="menuProfileContainer">
+          <v-avatar class="menuProfileAvatar">
+            <v-img :src='userProfilePicture()'>
+              <v-icon large v-if="!hasPicture">mdi-account</v-icon>
+            </v-img>
+          </v-avatar>
+        </v-row>
+        <v-row class="menuProfileContainer">
+          {{user.name}}
+        </v-row>
+      </v-container>
       <v-list dense>
-        <v-list-item v-on:click="$router.push('/Home')" link>
+
+        <v-list-item v-if="$route.path!=='/Home'" v-on:click="$router.push('/Home')" link>
           <v-list-item-action>
             <v-icon>mdi-home</v-icon>
           </v-list-item-action>
@@ -15,7 +26,16 @@
             <v-list-item-title>Home</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item v-if="!user.isLoggedIn" v-on:click="$router.push('/Login')" link>
+        <v-list-item class="menuItemSelected" disabled v-if="$route.path==='/Home'" v-on:click="$router.push('/Home')" link>
+          <v-list-item-action>
+            <v-icon>mdi-home</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Home</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item v-if="!user.isLoggedIn&&$route.path!=='/Login'" v-on:click="$router.push('/Login')" link>
           <v-list-item-action>
             <v-icon>mdi-login</v-icon>
           </v-list-item-action>
@@ -23,7 +43,16 @@
             <v-list-item-title>Login</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item v-if="!user.isLoggedIn" v-on:click="$router.push('/Signup')" link>
+        <v-list-item disabled class="menuItemSelected" v-if="!user.isLoggedIn&&$route.path==='/Login'" v-on:click="$router.push('/Login')" link>
+          <v-list-item-action>
+            <v-icon>mdi-login</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Login</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item v-if="!user.isLoggedIn&&$route.path!=='/Signup'" v-on:click="$router.push('/Signup')" link>
           <v-list-item-action>
             <v-icon>mdi-account-multiple-plus</v-icon>
           </v-list-item-action>
@@ -31,7 +60,16 @@
             <v-list-item-title>Sign Up</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item v-if="user.isLoggedIn" v-on:click="$router.push('/Profile')" link>
+        <v-list-item disabled class="menuItemSelected" v-if="!user.isLoggedIn&&$route.path==='/Signup'" v-on:click="$router.push('/Signup')" link>
+          <v-list-item-action>
+            <v-icon>mdi-account-multiple-plus</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Sign Up</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item v-if="user.isLoggedIn&&$route.path!=='/Profile'" v-on:click="$router.push('/Profile')" link>
           <v-list-item-action>
             <v-icon>mdi-account</v-icon>
           </v-list-item-action>
@@ -39,7 +77,16 @@
             <v-list-item-title>Profile</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item v-if="user.isLoggedIn" v-on:click="$router.push('/Petitions')" link>
+        <v-list-item disabled class="menuItemSelected" v-if="user.isLoggedIn&&$route.path==='/Profile'" v-on:click="$router.push('/Profile')" link>
+          <v-list-item-action>
+            <v-icon>mdi-account</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Profile</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item v-if="user.isLoggedIn&&$route.path!=='/Petitions'" v-on:click="$router.push('/Petitions')" link>
           <v-list-item-action>
             <v-icon>mdi-poll</v-icon>
           </v-list-item-action>
@@ -47,6 +94,15 @@
             <v-list-item-title>Petitions</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item disabled class="menuItemSelected" v-if="user.isLoggedIn&&$route.path==='/Petitions'" v-on:click="$router.push('/Petitions')" link>
+          <v-list-item-action>
+            <v-icon>mdi-poll</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Petitions</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
         <v-list-item link v-if="user.isLoggedIn" v-on:click="logout">
           <v-list-item-action>
             <v-icon>mdi-arrow-collapse-right</v-icon>
@@ -55,6 +111,7 @@
             <v-list-item-title>Log Out</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+
       </v-list>
     </v-navigation-drawer>
 
@@ -95,6 +152,7 @@
     },
     data: () => ({
       drawer: null,
+      hasPicture: false,
     }),
     mounted() {
       this.printInfo();
@@ -112,7 +170,21 @@
         router.push('Login');
       },
       printInfo() {
-        console.log(this.user.userId);
+      },
+      userProfilePicture() {
+        this.hasProfilePicture();
+        return "http://localhost:4941/api/v1/users/" + this.user.userId + "/photo"
+      },
+      hasProfilePicture() {
+        apiUser.getProfilePicture(this.user.userId).then(
+            () => {
+              this.hasPicture = true;
+            }
+        ).catch(
+            () => {
+              this.hasPicture = false;
+            }
+        )
       }
     }
   }
