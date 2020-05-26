@@ -1,50 +1,64 @@
 <template>
   <v-container>
     <v-row>
-      <v-form>
-        <v-row>
-          <v-col>
-            <h3>Search</h3>
-            <v-text-field label="Search" v-model="searchTerm"></v-text-field>
-          </v-col>
-          <v-col>
-            <h3>Filter</h3>
-            <v-combobox v-model="chosenCategory" :items="categories" label="Categories"></v-combobox>
-          </v-col>
-          <v-col>
-            <h3>Sort</h3>
-            <v-combobox v-model="chosenSortType" :items="sortTypes" label="Sort By"></v-combobox>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-btn v-on:click="getFilteredPetitions">Search</v-btn>
-          <v-btn v-on:click="clearSearch">Clear</v-btn>
-        </v-row>
-      </v-form>
-    </v-row>
-    <v-row>
-      <v-divider></v-divider>
-    </v-row>
-    <v-row>
-      <v-card tile outlined v-for="(petition, idx) in petitions" v-bind:key="idx">
-        <v-card-text>
-          <a v-on:click="goToPetition(petition.petitionId)">{{petition.title}}</a>
-          <br>
-          <p>Category: {{petition.category}}<br>Author: {{petition.authorName}}</p>
+      <v-col>
+        <v-card class="petitionsCard">
           <v-row>
-            <v-icon v-if="signedPetitions.includes(petition.petitionId)" color="green" v-on:click="toggleSignature(petition.petitionId)">mdi-pencil-outline</v-icon>
-            <v-icon v-if="!signedPetitions.includes(petition.petitionId)" v-on:click="toggleSignature(petition.petitionId)">mdi-pencil-outline</v-icon>
-            <h2>{{petition.signatureCount}}</h2>
+            <v-col>
+              <h3>Search</h3>
+              <v-text-field outlined label="Search" v-model="searchTerm"></v-text-field>
+            </v-col>
+            <v-col>
+              <h3>Filter</h3>
+              <v-overflow-btn outlined v-model="chosenCategory" :items="categories" label="Categories"></v-overflow-btn>
+            </v-col>
+            <v-col>
+              <h3>Sort</h3>
+              <v-overflow-btn outlined v-model="chosenSortType" :items="sortTypes" label="Sort By"></v-overflow-btn>
+            </v-col>
           </v-row>
-        </v-card-text>
-      </v-card>
+          <v-row>
+            <v-btn color="success" class="petitionsButton" v-on:click="search">Search</v-btn>
+            <v-btn color="error" class="petitionsButton" v-on:click="clearSearch">Clear Search</v-btn>
+          </v-row>
+        </v-card>
+      </v-col>
     </v-row>
     <v-row>
-      <v-btn :disabled="pageNumber === 1" v-on:click="firstPage">First</v-btn>
-      <v-btn :disabled="pageNumber === 1" v-on:click="prevPage">Prev</v-btn>
-      <p>{{(((pageNumber - 1) * pageAmountShown) + 1) + "-" + (pageNumber) * pageAmountShown}}</p>
-      <v-btn :disabled="this.petitions.length < 10" v-on:click="nextPage">Next</v-btn>
-      <v-btn :disabled="this.petitions.length < 10" v-on:click="lastPage">Last</v-btn>
+      <v-col>
+        <v-card class="petitionsCard">
+          <v-row v-if="petitions.length > 0" no-gutters>
+            <v-card class="petitionInfoCard" tile outlined v-for="(petition, idx) in petitions" v-bind:key="idx">
+              <v-card-text>
+                <a class="petitionLink" v-on:click="goToPetition(petition.petitionId)">{{petition.title}}</a>
+                <br>
+                <p>Category: {{petition.category}}<br>Author: {{petition.authorName}}</p>
+                <v-row class="signatures" justify="end" align="center">
+                  <v-icon v-if="signedPetitions.includes(petition.petitionId)" color="primary" v-on:click="toggleSignature(petition.petitionId)">mdi-pen</v-icon>
+                  <v-icon v-if="!signedPetitions.includes(petition.petitionId)" v-on:click="toggleSignature(petition.petitionId)">mdi-pen</v-icon>
+                  <h2>{{petition.signatureCount}}</h2>
+                </v-row>
+              </v-card-text>
+            </v-card>
+          </v-row>
+          <v-row v-if="petitions.length === 0">
+            <h3 class="profileHeader">No Petitions Found</h3>
+          </v-row>
+        </v-card>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col>
+        <v-card>
+          <v-row justify="center" align="center">
+            <v-btn class="pageNavButton" color="info" :disabled="pageNumber === 1" v-on:click="firstPage">First</v-btn>
+            <v-btn class="pageNavButton" color="info" :disabled="pageNumber === 1" v-on:click="prevPage">Prev</v-btn>
+            <h3 class="pageNavHeader">{{(((pageNumber - 1) * pageAmountShown) + 1) + "-" + (pageNumber) * pageAmountShown}}</h3>
+            <v-btn class="pageNavButton" color="info" :disabled="this.petitions.length < 10" v-on:click="nextPage">Next</v-btn>
+            <v-btn class="pageNavButton" color="info" :disabled="this.petitions.length < 10" v-on:click="lastPage">Last</v-btn>
+          </v-row>
+        </v-card>
+      </v-col>
     </v-row>
   </v-container>
 </template>
@@ -93,6 +107,10 @@
       ...mapGetters(["user"]),
     },
     methods: {
+      search() {
+        this.pageNumber = 1;
+        this.getFilteredPetitions();
+      },
       getFilteredPetitions() {
         let first = true;
         let queryString = "";

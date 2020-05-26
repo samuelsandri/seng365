@@ -1,42 +1,42 @@
 <template>
   <div class="loginContainer">
-    <v-form class="loginForm">
+    <v-snackbar color="error" top v-model="snackbar" :timeout="5000">
+      {{ errorMsg }}
+    </v-snackbar>
+    <v-form v-model="valid" class="loginForm">
       <v-text-field
+          :rules="nameRules"
           v-model="user.name"
           label="Name"
           required
           outlined
-          clearable
       ></v-text-field>
       <v-text-field
+          :rules="emailRules"
           v-model="user.email"
           label="Email"
           required
           outlined
-          clearable
       ></v-text-field>
       <v-text-field
+          :rules="passwordRules"
+          type="password"
           v-model="password"
           label="Password"
           required
           outlined
-          clearable
       ></v-text-field>
       <v-text-field
           v-model="user.city"
           label="City"
-          required
           outlined
-          clearable
       ></v-text-field>
       <v-text-field
           v-model="user.country"
           label="Country"
-          required
           outlined
-          clearable
       ></v-text-field>
-      <v-btn v-on:click="createUser">Sign Up</v-btn>
+      <v-btn :disabled="!valid" v-on:click="createUser">Sign Up</v-btn>
     </v-form>
   </div>
 </template>
@@ -50,7 +50,21 @@
     name: "SignUp",
     data() {
       return {
+        valid: false,
         password: null,
+        emailRules: [
+          v => !!v || 'E-mail is required',
+          v => /.+@.+/.test(v) || 'E-mail must be valid',
+        ],
+        nameRules: [
+          v => !!v || 'Name is required',
+          v => v.length <= 20 || 'Name must be less than 20 characters',
+        ],
+        passwordRules: [
+          v => !!v || 'Password is required',
+        ],
+        snackbar: false,
+        errorMsg: '',
       };
     },
     computed: {
@@ -59,21 +73,41 @@
     methods: {
       ...mapActions(["setUserId", "userLogin"]),
       createUser() {
-        apiUser.createUser(this.user.name, this.user.email, this.password, this.user.city, this.user.country)
+        let data = {
+          name: this.user.name,
+          email: this.user.email,
+          password: this.password,
+        };
+        if (!this.isEmptyOrSpaces(this.user.city)) {
+          data["city"] = this.user.city;
+        }
+        if (!this.isEmptyOrSpaces(this.user.country)) {
+          data["country"] = this.user.country;
+        }
+        apiUser.createUser(data)
             .then(response => {
               this.setUserId(response.data.userId);
               this.loginUser();
-            });
+            }).catch(
+                error => {
+                  this.errorMsg = error.response.statusText;
+                  this.snackbar = true;
+                }
+        );
       },
       loginUser() {
         apiUser.login(this.user.email, this.password)
             .then(response => {
-                  this.setUserId(response.data.userId);
-                  this.userLogin();
-                  localStorage.setItem("sessionId", response.data.token);
-                  apiUser.refreshInstance();
-                  router.push('Home');
-                });
+              localStorage.setItem("userId", response.data.userId);
+              localStorage.setItem("sessionId", response.data.token);
+              this.setUserId(response.data);
+              this.userLogin();
+              apiUser.refreshInstance();
+              router.push('/Profile');
+            });
+      },
+      isEmptyOrSpaces(str){
+        return str === null || str.match(/^ *$/) !== null;
       },
     }
   }

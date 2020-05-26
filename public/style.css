@@ -28,3 +28,62 @@
 .editImageButton {
     margin-top: 5px;
 }
+
+.profileEditButton {
+    margin-right: 20px !important;
+}
+
+.profileHeader {
+    margin-left: 20px !important;
+}
+
+.profilePictureCol {
+    margin-left: 20px !important;
+}
+
+.petitionsCard {
+    padding: 10px !important;
+}
+
+.petitionsButton {
+    margin-left: 20px;
+}
+
+.petitionInfoCard {
+    margin: 5px !important;
+}
+
+.signatures {
+    margin-right: 10px !important;
+}
+
+.pageNavButton {
+    margin: 5px 10px !important;
+}
+
+.pageNavHeader {
+    margin: 0 10px !important;
+}
+
+.cardDivider {
+    margin: 0 10px 5px !important;
+}
+
+.popupCardDivider {
+    margin: 0 10px 20px !important;
+}
+
+.leftColCard {
+    padding: 0 0 10px !important;
+}
+
+.signatoryProfileAvatar {
+    width: 60px !important;
+    height: 60px !important;
+    background-color: lightgray;
+    margin-left: 20px;
+}
+
+.formSecondButton {
+    margin-left: 20px;
+}

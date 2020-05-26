@@ -1,10 +1,10 @@
 const state = {
   user: {
     userId: null,
-    name: null,
-    email: null,
-    city: null,
-    country: null,
+    name: '',
+    email: '',
+    city: '',
+    country: '',
     isLoggedIn: false,
   }
 };
@@ -40,10 +40,10 @@ const mutations = {
   logout() {
     state.user.isLoggedIn = false;
     state.user.userId = null;
-    state.user.name = null;
-    state.user.email = null;
-    state.user.city = null;
-    state.user.country = null;
+    state.user.name = '';
+    state.user.email = '';
+    state.user.city = '';
+    state.user.country = '';
   }
 };
 

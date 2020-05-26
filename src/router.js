@@ -2,10 +2,10 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Login from "@/components/Login";
 import SignUp from "@/components/SignUp";
-import Home from "@/components/Home";
 import Profile from "./components/Profile";
 import Petitions from "./components/Petitions";
 import Petition from "./components/Petition";
+import {apiUser} from "./api";
 import store from './store/index.js';
 
 Vue.use(VueRouter);
@@ -20,11 +20,6 @@ const routes = [
     path: '/signup',
     component: SignUp,
     name: 'Sign Up'
-  },
-  {
-    path: '/home',
-    component: Home,
-    name: 'Home'
   },
   {
     path: '/profile',
@@ -49,16 +44,38 @@ const router = new VueRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  let toOpenPage = to.path === '/Signup' || to.path === '/Login' || to.path === '/Home';
-  if (!store.getters.isLoggedIn && !toOpenPage) {
+  let toOpenPage = to.path === '/Signup' || to.path === '/Login' || to.path === '/signup' || to.path === '/login';
+  let toAnyUserPage = to.path === '/Petitions' || to.path === '/petitions' || to.name === 'Petition';
+  let reload = from.path === '/' && !toOpenPage;
+  if ((localStorage.getItem('sessionId') === null || localStorage.getItem('sessionId') === 'null') &&
+      !toOpenPage && !toAnyUserPage) {
     next('/Login');
-  } else if (store.getters.isLoggedIn && (to.path === '/Signup' || to.path === '/Login')) {
-    next('/Home');
+  } else if (localStorage.getItem('sessionId') !== null && localStorage.getItem('sessionId') !== 'null' && toOpenPage) {
+    reloadUser();
+    next('/Profile');
+  } else if (reload && localStorage.getItem('sessionId') !== null && localStorage.getItem('sessionId') !== 'null') {
+    reloadUser();
+    next();
   } else if (to.path === '/') {
-    next('/Home');
+    next('/Login');
   } else {
     next();
   }
 });
+
+function reloadUser() {
+  let userId = localStorage.getItem('userId');
+  store._actions.setUserId[0]({userId: parseInt(userId)});
+  store._actions.userLogin[0]();
+  getLoggedInUser();
+  apiUser.refreshInstance();
+}
+
+function getLoggedInUser() {
+  apiUser.getUser(localStorage.getItem("userId"))
+      .then(response => {
+        store._actions.createUser[0](response.data);
+      });
+}
 
 export default router;

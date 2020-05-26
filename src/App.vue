@@ -18,23 +18,6 @@
       </v-container>
       <v-list dense>
 
-        <v-list-item v-if="$route.path!=='/Home'" v-on:click="$router.push('/Home')" link>
-          <v-list-item-action>
-            <v-icon>mdi-home</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Home</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item class="menuItemSelected" disabled v-if="$route.path==='/Home'" v-on:click="$router.push('/Home')" link>
-          <v-list-item-action>
-            <v-icon>mdi-home</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Home</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-
         <v-list-item v-if="!user.isLoggedIn&&$route.path!=='/Login'" v-on:click="$router.push('/Login')" link>
           <v-list-item-action>
             <v-icon>mdi-login</v-icon>
@@ -86,7 +69,7 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item v-if="user.isLoggedIn&&$route.path!=='/Petitions'" v-on:click="$router.push('/Petitions')" link>
+        <v-list-item v-if="$route.path!=='/Petitions'" v-on:click="$router.push('/Petitions')" link>
           <v-list-item-action>
             <v-icon>mdi-poll</v-icon>
           </v-list-item-action>
@@ -94,7 +77,7 @@
             <v-list-item-title>Petitions</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item disabled class="menuItemSelected" v-if="user.isLoggedIn&&$route.path==='/Petitions'" v-on:click="$router.push('/Petitions')" link>
+        <v-list-item disabled class="menuItemSelected" v-if="$route.path==='/Petitions'" v-on:click="$router.push('/Petitions')" link>
           <v-list-item-action>
             <v-icon>mdi-poll</v-icon>
           </v-list-item-action>
@@ -117,7 +100,7 @@
 
     <v-app-bar
         app
-        color="indigo"
+        color="primary"
         dark
     >
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
@@ -133,10 +116,10 @@
       </v-container>
     </v-content>
     <v-footer
-        color="indigo"
+        color="primary"
         app
     >
-      <span class="white--text">&copy; 2019</span>
+      <span class="white--text">&copy; 2020</span>
     </v-footer>
   </v-app>
 </template>
@@ -164,10 +147,11 @@
     methods: {
       ...mapActions(['userLogout']),
       logout() {
-        apiUser.logout();
-        this.userLogout();
         localStorage.setItem('sessionId', null);
-        router.push('Login');
+        localStorage.setItem('userId', null);
+        apiUser.logout().then();
+        this.userLogout();
+        router.push('/Login');
       },
       printInfo() {
       },
@@ -189,3 +173,7 @@
     }
   }
 </script>
+
+<style>
+  @import "../public/style.css";
+</style>

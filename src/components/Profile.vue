@@ -1,54 +1,73 @@
 <template>
   <v-container>
+    <v-snackbar color="error" top v-model="errorSnackbar" :timeout="5000">
+      {{ errorMsg }}
+    </v-snackbar>
+    <v-snackbar color="info" top v-model="successSnackbar" :timeout="5000">
+      {{ successMsg }}
+    </v-snackbar>
     <v-row>
       <v-col>
         <v-card>
           <v-row>
             <v-col>
-              <h2>Profile Details</h2>
+              <h2 class="profileHeader">Profile Details</h2>
             </v-col>
             <v-col cols="2">
-              <v-row justify="end">
-                <v-dialog>
+              <v-row class="profileEditButton" justify="end">
+                <v-dialog v-model="editDialog" max-width="800px">
                   <template v-slot:activator="{ on }">
-                    <v-btn v-on="on">Edit</v-btn>
+                    <v-btn color="info" v-on="on">Edit Profile</v-btn>
                   </template>
                   <v-card>
-                    <v-form>
-                      <v-text-field outlined label="Name" v-model="user.name"></v-text-field>
-                      <v-text-field outlined label="Email" v-model="user.email"></v-text-field>
-                      <v-text-field outlined label="City" v-model="user.city"></v-text-field>
-                      <v-text-field outlined label="Country" v-model="user.country"></v-text-field>
-                      <v-text-field outlined label="New Password" v-model="newPassword"></v-text-field>
-                      <v-text-field v-if="!isEmptyOrSpaces(newPassword)" outlined label="Current Password" v-model="currentPassword"></v-text-field>
-                      <v-btn v-on:click="editProfile">Submit</v-btn>
-                    </v-form>
+                    <v-card-title>Edit Profile</v-card-title>
+                    <v-divider class="popupCardDivider"></v-divider>
+                    <v-card-text>
+                      <v-text-field clearable outlined label="Name" v-model="user.name"></v-text-field>
+                      <v-text-field clearable outlined label="Email" v-model="user.email"></v-text-field>
+                      <v-text-field clearable outlined label="City" v-model="user.city"></v-text-field>
+                      <v-text-field clearable outlined label="Country" v-model="user.country"></v-text-field>
+                      <v-text-field type="password" clearable outlined label="New Password" v-model="newPassword"></v-text-field>
+                      <v-text-field type="password" clearable v-if="!isEmptyOrSpaces(newPassword)" outlined label="Current Password" v-model="currentPassword"></v-text-field>
+                      <v-btn color="success" @click="editDialog = false" v-on:click="editProfile">Submit</v-btn>
+                    </v-card-text>
                   </v-card>
                 </v-dialog>
               </v-row>
             </v-col>
           </v-row>
-          <v-divider style="margin: 0 10px 5px"></v-divider>
+          <v-divider class="cardDivider"></v-divider>
           <v-row align="start" justify="start">
-            <v-col cols="3">
+            <v-col class="profilePictureCol" cols="3">
               <v-row align="center" justify="center">
                 <v-avatar class="profileAvatar">
-                  <v-img :src='userProfilePicture()'>
+                  <v-img id="profileImg" :src='userProfilePicture()'>
                     <v-icon x-large v-if="!hasPicture">mdi-account</v-icon>
                   </v-img>
                 </v-avatar>
               </v-row>
               <v-row align="center" justify="center">
-                <v-dialog>
+                <v-dialog v-model="profilePictureDialog">
                   <template v-slot:activator="{on}">
-                    <v-btn v-on="on" class="editImageButton">Edit Image</v-btn>
+                    <v-btn v-on="on" color="info" class="editImageButton">Edit Image</v-btn>
                   </template>
                   <v-card>
-                    <v-form>
-                      <v-file-input label="Profile Picture" v-model="profilePicture" prepend-icon="mdi-camera" outlined
-                                    show-size clearable>
-                      </v-file-input>
-                    </v-form>
+                    <v-card-title>Edit Profile Picture</v-card-title>
+                    <v-divider class="popupCardDivider"></v-divider>
+                    <v-card-text>
+                      <v-form>
+                        <v-file-input label="Profile Picture"
+                                      v-model="profilePicture"
+                                      prepend-icon="mdi-camera"
+                                      outlined
+                                      show-size
+                                      clearable
+                                      accept="image/jpg,image/jpeg,image/gif,image/png">
+                        </v-file-input>
+                        <v-btn color="success" @click="profilePictureDialog = false" v-on:click="setProfilePicture">Save</v-btn>
+                        <v-btn class="formSecondButton" color="error" @click="profilePictureDialog = false" v-on:click="removeProfilePicture">Remove</v-btn>
+                      </v-form>
+                    </v-card-text>
                   </v-card>
                 </v-dialog>
               </v-row>
@@ -63,35 +82,76 @@
       </v-col>
     </v-row>
     <v-row>
-      <v-dialog>
-        <template v-slot:activator="{ on }">
-          <v-btn v-on="on">Create</v-btn>
-        </template>
+      <v-col>
         <v-card>
-          <v-form>
-            <v-text-field outlined label="Title" v-model="petitionTitle"></v-text-field>
-            <v-textarea outlined label="Description" v-model="petitionDescription"></v-textarea>
-            <v-combobox outlined :items="categories" label="Category" v-model="petitionCategory"></v-combobox>
-            <v-date-picker v-model="petitionEndDate"></v-date-picker>
-          </v-form>
-        </v-card>
-        <v-card-actions>
-          <v-btn v-on:click="createNewPetition">Create</v-btn>
-        </v-card-actions>
-      </v-dialog>
-    </v-row>
-    <v-row>
-      <v-card tile outlined v-for="(petition, idx) in petitions" v-bind:key="idx">
-        <v-card-text>
-          <a v-on:click="goToPetition(petition.petitionId)">{{petition.title}}</a>
-          <br>
-          <p>Category: {{petition.category}}<br>Author: {{petition.authorName}}</p>
           <v-row>
-            <v-icon>mdi-pencil-outline</v-icon>
-            <h2>{{petition.signatureCount}}</h2>
+            <v-col cols="2">
+              <h2 class="profileHeader">My Petitions</h2>
+            </v-col>
+            <v-col>
+              <v-dialog v-model="createPetitionDialog" max-width="800px">
+                <template v-slot:activator="{ on }">
+                  <v-btn v-on="on" color="success">Create Petition</v-btn>
+                </template>
+                <v-card>
+                  <v-card-title>Create Petition</v-card-title>
+                  <v-divider class="popupCardDivider"></v-divider>
+                  <v-card-text>
+                    <v-form>
+                      <v-text-field clearable outlined label="Title" v-model="petitionTitle"></v-text-field>
+                      <v-textarea clearable outlined label="Description" v-model="petitionDescription"></v-textarea>
+                      <v-overflow-btn outlined :items="categories" label="Category" v-model="petitionCategory"></v-overflow-btn>
+                      <v-label>Closing Date: </v-label>
+                      <v-date-picker class="formSecondButton" v-model="petitionEndDate"></v-date-picker>
+                      <br><br>
+                      <v-btn color="success" @click="createPetitionDialog = false" v-on:click="createNewPetition">Create</v-btn>
+                    </v-form>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
+            </v-col>
           </v-row>
-        </v-card-text>
-      </v-card>
+          <v-divider class="cardDivider"></v-divider>
+          <v-card-text>
+            <v-row>
+              <v-col cols="3">
+                <h4>Title</h4>
+              </v-col>
+              <v-col>
+                <h4>Category</h4>
+              </v-col>
+              <v-col>
+                <h4>Author</h4>
+              </v-col>
+              <v-col>
+                <h4>Signatures</h4>
+              </v-col>
+              <v-col></v-col>
+            </v-row>
+            <v-row v-for="(petition, idx) in petitions" v-bind:key="idx" align="center" justify="center">
+              <v-col cols="3">
+                <a v-on:click="goToPetition(petition.petitionId)">{{petition.title}}</a>
+              </v-col>
+              <v-col>
+                <p class="profileInfoLabel">{{petition.category}}</p>
+              </v-col>
+              <v-col>
+                <p class="profileInfoLabel">{{petition.authorName}}</p>
+              </v-col>
+              <v-col>
+                <v-row align="center">
+                  <v-icon color="primary">mdi-pen</v-icon>
+                  <h2>{{petition.signatureCount}}</h2>
+                </v-row>
+              </v-col>
+              <v-col>
+                <v-btn color="error" v-on:click="deletePetition(petition.petitionId)">Delete</v-btn>
+              </v-col>
+            </v-row>
+          </v-card-text>
+
+        </v-card>
+      </v-col>
     </v-row>
   </v-container>
 </template>
@@ -116,6 +176,26 @@
         currentPassword: null,
         profilePicture: null,
         hasPicture: false,
+        editDialog: false,
+        profilePictureDialog: false,
+        createPetitionDialog: false,
+        editProfileValid: false,
+        createPetitionValid: false,
+        emailRules: [
+          v => !!v || 'E-mail is required',
+          v => /.+@.+/.test(v) || 'E-mail must be valid',
+        ],
+        nameRules: [
+          v => !!v || 'Name is required',
+          v => v.length <= 20 || 'Name must be less than 20 characters',
+        ],
+        passwordRules: [
+          v => !!v || 'Password is required',
+        ],
+        errorSnackbar: false,
+        errorMsg: '',
+        successSnackbar: false,
+        successMsg: '',
       }
     },
     mounted() {
@@ -155,28 +235,93 @@
         router.push('/petitions/' + petitionId);
       },
       createNewPetition() {
-        apiPetition.createPetition(this.petitionTitle, this.petitionDescription,
-            this.categoriesDict[this.petitionCategory], this.petitionEndDate).then(
-                response => {
-                  apiPetition.signPetition(response.data.petitionId);
-                }
-        )
+        if (!this.isEmptyOrSpaces(this.petitionEndDate)) {
+          apiPetition.createPetition(this.petitionTitle, this.petitionDescription,
+              this.categoriesDict[this.petitionCategory], this.petitionEndDate).then(
+              response => {
+                this.successMsg = "Created";
+                this.successSnackbar = true;
+                apiPetition.signPetition(response.data.petitionId).then(
+                    () => {
+                      this.getFilteredPetitions();
+                    }
+                );
+              }).catch(
+              err => {
+                this.errorMsg = err.response.statusText;
+                this.errorSnackbar = true;
+              }
+          )
+        } else {
+          apiPetition.createPetitionNoDate(this.petitionTitle, this.petitionDescription,
+              this.categoriesDict[this.petitionCategory]).then(
+              response => {
+                this.successMsg = "Created";
+                this.successSnackbar = true;
+                apiPetition.signPetition(response.data.petitionId).then(
+                    () => {
+                      this.getFilteredPetitions();
+                    }
+                );
+              }).catch(
+              err => {
+                this.errorMsg = err.response.statusText;
+                this.errorSnackbar = true;
+              }
+          )
+        }
       },
       setProfilePicture() {
-        if (this.user.profilePicture !== null) {
-          apiUser.addProfilePicture(this.user.userId, this.user.profilePicture)
+        console.log(this.profilePicture);
+        if (this.profilePicture !== null) {
+          apiUser.addProfilePicture(this.user.userId, this.profilePicture, 'image/jpeg').then(
+              () => {
+                location.reload();
+              }
+          ).catch(
+              err => {
+                this.errorMsg = err.response.statusText;
+                this.errorSnackbar = true;
+              }
+          );
         }
+      },
+      removeProfilePicture() {
+        apiUser.removeProfilePicture(this.user.userId).then(
+            () => {
+              location.reload();
+            }
+        );
       },
       isEmptyOrSpaces(str){
         return str === null || str.match(/^ *$/) !== null;
       },
       editProfile() {
-        if (this.isEmptyOrSpaces(this.newPassword)) {
-          apiUser.editUser(this.user.userId, this.user.name, this.user.email, this.user.city, this.user.country)
-        } else {
-          apiUser.editUserNewPassword(this.user.userId, this.user.name, this.user.email, this.newPassword, this.currentPassword,
-              this.user.city, this.user.country)
+        let data = {
+          name: this.user.name,
+          email: this.user.email,
+        };
+        if (!this.isEmptyOrSpaces(this.newPassword)) {
+          data["password"] = this.newPassword;
+          data["currentPassword"] = this.currentPassword;
         }
+        if (!this.isEmptyOrSpaces(this.user.city)) {
+          data["city"] = this.user.city;
+        }
+        if (!this.isEmptyOrSpaces(this.user.country)) {
+          data["country"] = this.user.country;
+        }
+        apiUser.editUser(this.user.userId, data).then(
+            () => {
+              this.successMsg = 'Saved';
+              this.successSnackbar = true;
+            }
+        ).catch(
+            err => {
+              this.errorMsg = err.response.statusText;
+              this.errorSnackbar = true;
+            }
+        );
       },
       userProfilePicture() {
         this.hasProfilePicture();
@@ -192,7 +337,16 @@
               this.hasPicture = false;
             }
         )
-      }
+      },
+      deletePetition(petitionId) {
+        apiPetition.deletePetition(petitionId).then(
+            () => {
+              this.getFilteredPetitions();
+              this.successMsg = 'Deleted';
+              this.successSnackbar = true;
+            }
+        );
+      },
     }
   }
 </script>
